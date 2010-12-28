@@ -238,7 +238,7 @@ steps = [
 	SyncDir(funtoo_overlay.root,"licenses"),
 	SyncDir(funtoo_overlay.root,"eclass"),
 	InsertEbuilds(funtoo_overlay, replace=True),
-	InsertEbuilds(tarsius_overlay, replace=["sys-libs/libixp","x11-wm/wmii","dev-vcs/cvsps"]),
+	InsertEbuilds(tarsius_overlay, replace=["sys-libs/libixp","x11-wm/wmii","dev-vcs/cvsps", "net-print/foo2zjs"]),
 	GenCache()
 ]
 
