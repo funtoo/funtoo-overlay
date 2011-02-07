@@ -12,5 +12,6 @@
 	<use>
 		<flag name="epydoc">Build html API documentation with epydoc.</flag>
 		<flag name="python3">Use python3 as Python interpreter.</flag>
+		<flag name="experimental">EXPERTS ONLY! Enable very experimental features.</flag>
 	</use>
 </pkgmetadata>
