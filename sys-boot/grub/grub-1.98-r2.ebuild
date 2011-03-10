@@ -65,13 +65,13 @@ src_compile() {
 
 src_install() {
 	emake DESTDIR="${D}" install || die
-	for delme in /etc/default /etc/grub.d /sbin/grub-update /sbin/grub-mkconfig 
+	for delme in /etc /sbin/grub-update /sbin/grub-mkconfig
 	do
 		rm -rf ${D}/$delme || die "couldn't remove upstream stuff"
 	done
 	dodoc AUTHORS ChangeLog NEWS README THANKS TODO
 
-	if use binfont 
+	if use binfont
 	then
 		insinto /usr/share/grub/fonts
 		cd ${T}; xz -dc ${DISTDIR}/${BINFONT}.xz > unifont.pf2 || die
