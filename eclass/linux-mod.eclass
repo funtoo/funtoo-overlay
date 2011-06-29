@@ -195,8 +195,9 @@ use_m() {
 
 	# if the kernel version is greater than 2.6.6 then we should use
 	# M= instead of SUBDIRS=
-	[ ${KV_MAJOR} -eq 2 -a ${KV_MINOR} -gt 5 -a ${KV_PATCH} -gt 5 ] && \
-		return 0 || return 1
+	[ ${KV_MAJOR} -gt 2 ] && return 0
+	[ ${KV_MAJOR} -eq 2 -a ${KV_MINOR} -gt 5 -a ${KV_PATCH} -gt 5 ] && return 0
+	return 1
 }
 
 # @FUNCTION: convert_to_m
@@ -328,7 +329,7 @@ remove_moduledb() {
 set_kvobj() {
 	debug-print-function ${FUNCNAME} $*
 
-	if kernel_is 2 6
+	if kernel_is ge 2 6
 	then
 		KV_OBJ="ko"
 	else
