@@ -1,0 +1,61 @@
+From 8472d2f1387e7f3ef54d345ec9af1d2531366a1f Mon Sep 17 00:00:00 2001
+From: Timo A. Hummel <privat@timohummel.com>
+Date: Wed, 16 Feb 2011 00:49:38 +0100
+Subject: [PATCH] Remove _NET_WORKAREA to allow >qt-4.6.0 display menus on the second screen
+
+---
+ include/xcb.h |    1 -
+ src/ewmh.c    |    4 ----
+ src/mainx.c   |    2 --
+ 3 files changed, 0 insertions(+), 7 deletions(-)
+
+diff --git a/include/xcb.h b/include/xcb.h
+index 8a21fe4..7faf1c6 100644
+--- a/include/xcb.h
++++ b/include/xcb.h
+@@ -59,7 +59,6 @@ enum { _NET_SUPPORTED = 0,
+         _NET_WM_STRUT_PARTIAL,
+         _NET_CURRENT_DESKTOP,
+         _NET_ACTIVE_WINDOW,
+-        _NET_WORKAREA,
+         WM_PROTOCOLS,
+         WM_DELETE_WINDOW,
+         UTF8_STRING,
+diff --git a/src/ewmh.c b/src/ewmh.c
+index 6bfa309..2ffd81f 100644
+--- a/src/ewmh.c
++++ b/src/ewmh.c
+@@ -94,10 +94,6 @@ void ewmh_update_workarea() {
+                 memcpy(workarea + (sizeof(Rect) * count++), &(ws->rect), sizeof(Rect));
+                 memcpy(&last_rect, &(ws->rect), sizeof(Rect));
+         }
+-        xcb_change_property(global_conn, XCB_PROP_MODE_REPLACE, root,
+-                            atoms[_NET_WORKAREA], CARDINAL, 32,
+-                            num_workspaces * (sizeof(Rect) / sizeof(uint32_t)),
+-                            workarea);
+         free(workarea);
+         xcb_flush(global_conn);
+ }
+diff --git a/src/mainx.c b/src/mainx.c
+index 4126fe5..939cf43 100644
+--- a/src/mainx.c
++++ b/src/mainx.c
+@@ -325,7 +325,6 @@ int main(int argc, char *argv[], char *env[]) {
+         REQUEST_ATOM(WM_CLIENT_LEADER);
+         REQUEST_ATOM(_NET_CURRENT_DESKTOP);
+         REQUEST_ATOM(_NET_ACTIVE_WINDOW);
+-        REQUEST_ATOM(_NET_WORKAREA);
+ 
+         /* TODO: this has to be more beautiful somewhen */
+         int major, minor, error;
+@@ -490,7 +489,6 @@ int main(int argc, char *argv[], char *env[]) {
+         GET_ATOM(WM_CLIENT_LEADER);
+         GET_ATOM(_NET_CURRENT_DESKTOP);
+         GET_ATOM(_NET_ACTIVE_WINDOW);
+-        GET_ATOM(_NET_WORKAREA);
+ 
+         xcb_property_set_handler(&prophs, atoms[_NET_WM_WINDOW_TYPE], UINT_MAX, handle_window_type, NULL);
+         /* TODO: In order to comply with EWMH, we have to watch _NET_WM_STRUT_PARTIAL */
+-- 
+1.7.4.1
+
