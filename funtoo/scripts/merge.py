@@ -155,13 +155,14 @@ class UnifiedTree(Tree):
 
 class InsertEbuilds(MergeStep):
 
-	def __init__(self,srctree,select="all",skip=None,replace=False,categories=None):
+	def __init__(self,srctree,select="all",skip=None,replace=False,update=False,categories=None):
 		self.select = select
 		self.skip = skip
 		self.srctree = srctree
 		self.replace = replace
+		self.update = update
 		self.categories = categories
-
+	
 	def run(self,desttree):
 		desttree.logTree(self.srctree)
 		# Figure out what categories to process:
@@ -214,7 +215,38 @@ class InsertEbuilds(MergeStep):
 				if self.replace == True or (type(self.replace) == types.ListType and "%s/%s" % (cat,pkg) in self.replace):
 					runShell("rm -rf %s; cp -a %s %s" % (tpkgdir, pkgdir, tpkgdir ))
 				else:
-					runShell("[ ! -e %s ] && cp -a %s %s || echo \"# skipping %s/%s\"" % (tpkgdir, pkgdir, tpkgdir, cat, pkg ))
+					if self.update == False:
+						runShell("[ ! -e %s ] && cp -a %s %s || echo \"# skipping %s/%s\"" % (tpkgdir, pkgdir, tpkgdir, cat, pkg ))
+					else:
+						# If the target directory does not exist, we create it. 
+						runShell("[ ! -e %s ] && mkdir %s || echo \"# updating %s/%s\"" % (tpkgdir, tpkgdir, cat, pkg))
+
+						# We create a dummy Manifest file if it doesn't exist.
+						runShell("[ ! -e %s/Manifest ] && touch %s/Manifest || echo \"# creating dummy manifest\"" % (tpkgdir, tpkgdir))
+
+						# We backup the target Manifest file.
+						runShell("mv %s/Manifest %s/Manifest.bkp" % (tpkgdir, tpkgdir))
+
+						# We copy the files from the source directory to the target directory.
+						runShell("cp -a %s/* %s" % (pkgdir, tpkgdir))
+
+						# We merge the two Manifest files
+						fOldManifest = open("%s/Manifest.bkp" % (tpkgdir ))
+						fNewManifest = open("%s/Manifest" % (tpkgdir ))
+						lOldManifest = fOldManifest.readlines()
+						lNewManifest = fNewManifest.readlines()
+
+						# We remove from the old manifest the entries that are in the new manifest.
+						uniqueOldEntries = [l for l in lOldManifest if not l.split()[:2] in [l2.split()[:2] for l2 in lNewManifest]]
+
+						# We merge and sort the cleaned old manifest and the new manifest.
+						mergedEntries = uniqueOldEntries + lNewManifest
+						mergedEntries.sort()
+						fNewManifest = open("%s/Manifest" % (tpkgdir ), "w")
+						fNewManifest.writelines(mergedEntries)
+
+						# We delete the old Manifest file.
+						runShell("rm %s/Manifest.bkp" % (tpkgdir))
 
 class ProfileDepFix(MergeStep):
 
