@@ -1,0 +1,2249 @@
+This patch is Gentoo adapted version of the patch tsocks-1.8b5-tordns1.diff.gz found
+at http://www.totalinfosecurity.com/patches/tor.php.
+
+diff -Nru tsocks-1.8.orig/acconfig.h tsocks-1.8/acconfig.h
+--- tsocks-1.8.orig/acconfig.h	2002-05-18 07:59:38.000000000 +0300
++++ tsocks-1.8/acconfig.h	2008-02-13 18:08:59.000000000 +0200
+@@ -53,6 +53,9 @@
+ our version */
+ #undef DEFINE_STRSEP
+ 
++/* Should we resolve DNS entries in a way which works well with tor? */
++#undef USE_TOR_DNS
++
+ /* Allow the use of DNS names in the socks configuration file for socks
+ servers. This doesn't work if socksified DNS is enabled for obvious
+ reasons, it also introduces overhead, but people seem to want it */
+@@ -64,3 +67,14 @@
+ 
+ /* Location of configuration file (typically /etc/tsocks.conf) */
+ #undef CONF_FILE 
++
++/* Define to indicate the correct signature for gethostbyname_r */
++#undef HAVE_FUNC_GETHOSTBYNAME_R_6
++#undef HAVE_FUNC_GETHOSTBYNAME_R_5
++#undef HAVE_FUNC_GETHOSTBYNAME_R_3
++
++/* Signatures for name resolution stuff */
++#undef GETHOSTBYNAME_SIGNATURE
++#undef GETADDRINFO_SIGNATURE
++#undef GETIPNODEBYNAME_SIGNATURE
++
+diff -Nru tsocks-1.8.orig/aclocal/ac_c_gethostbyname_r.m4 tsocks-1.8/aclocal/ac_c_gethostbyname_r.m4
+--- tsocks-1.8.orig/aclocal/ac_c_gethostbyname_r.m4	1970-01-01 02:00:00.000000000 +0200
++++ tsocks-1.8/aclocal/ac_c_gethostbyname_r.m4	2008-02-13 18:08:59.000000000 +0200
+@@ -0,0 +1,132 @@
++dnl http://autoconf-archive.cryp.to/ax_func_which_gethostbyname_r.html
++
++AC_DEFUN([AX_FUNC_WHICH_GETHOSTBYNAME_R], [
++
++    AC_LANG_PUSH(C)
++    AC_MSG_CHECKING([how many arguments gethostbyname_r() takes])
++
++    AC_CACHE_VAL(ac_cv_func_which_gethostbyname_r, [
++
++################################################################
++
++ac_cv_func_which_gethostbyname_r=unknown
++
++#
++# ONE ARGUMENT (sanity check)
++#
++
++# This should fail, as there is no variant of gethostbyname_r() that takes
++# a single argument. If it actually compiles, then we can assume that
++# netdb.h is not declaring the function, and the compiler is thereby
++# assuming an implicit prototype. In which case, we're out of luck.
++#
++AC_COMPILE_IFELSE(
++    AC_LANG_PROGRAM(
++        [[#include <netdb.h>]],
++        [[
++            char *name = "www.gnu.org";
++            (void)gethostbyname_r(name) /* ; */
++        ]]),
++    ac_cv_func_which_gethostbyname_r=no)
++
++#
++# SIX ARGUMENTS
++# (e.g. Linux)
++#
++
++if test "$ac_cv_func_which_gethostbyname_r" = "unknown"; then
++
++AC_COMPILE_IFELSE(
++    AC_LANG_PROGRAM(
++        [[#include <netdb.h>]],
++        [[
++            char *name = "www.gnu.org";
++            struct hostent ret, *retp;
++            char buf@<:@1024@:>@;
++            int buflen = 1024;
++            int my_h_errno;
++            (void)gethostbyname_r(name, &ret, buf, buflen, &retp, &my_h_errno) /* ; */
++        ]]),
++    ac_cv_func_which_gethostbyname_r=six)
++
++fi
++
++#
++# FIVE ARGUMENTS
++# (e.g. Solaris)
++#
++
++if test "$ac_cv_func_which_gethostbyname_r" = "unknown"; then
++
++AC_COMPILE_IFELSE(
++    AC_LANG_PROGRAM(
++        [[#include <netdb.h>]],
++        [[
++            char *name = "www.gnu.org";
++            struct hostent ret;
++            char buf@<:@1024@:>@;
++            int buflen = 1024;
++            int my_h_errno;
++            (void)gethostbyname_r(name, &ret, buf, buflen, &my_h_errno) /* ; */
++        ]]),
++    ac_cv_func_which_gethostbyname_r=five)
++
++fi
++
++#
++# THREE ARGUMENTS
++# (e.g. AIX, HP-UX, Tru64)
++#
++
++if test "$ac_cv_func_which_gethostbyname_r" = "unknown"; then
++
++AC_COMPILE_IFELSE(
++    AC_LANG_PROGRAM(
++        [[#include <netdb.h>]],
++        [[
++            char *name = "www.gnu.org";
++            struct hostent ret;
++            struct hostent_data data;
++            (void)gethostbyname_r(name, &ret, &data) /* ; */
++        ]]),
++    ac_cv_func_which_gethostbyname_r=three)
++
++fi
++
++################################################################
++
++]) dnl end AC_CACHE_VAL
++
++case "$ac_cv_func_which_gethostbyname_r" in
++    three)
++    AC_MSG_RESULT([three])
++    AC_DEFINE(HAVE_FUNC_GETHOSTBYNAME_R_3)
++    ;;
++
++    five)
++    AC_MSG_RESULT([five])
++    AC_DEFINE(HAVE_FUNC_GETHOSTBYNAME_R_5)
++    ;;
++
++    six)
++    AC_MSG_RESULT([six])
++    AC_DEFINE(HAVE_FUNC_GETHOSTBYNAME_R_6)
++    ;;
++
++    no)
++    AC_MSG_RESULT([cannot find function declaration in netdb.h])
++    ;;
++
++    unknown)
++    AC_MSG_RESULT([can't tell])
++    ;;
++
++    *)
++    AC_MSG_ERROR([internal error])
++    ;;
++esac
++
++AC_LANG_POP(C)
++
++]) dnl end AC_DEFUN
++
+diff -Nru tsocks-1.8.orig/autogen.sh tsocks-1.8/autogen.sh
+--- tsocks-1.8.orig/autogen.sh	1970-01-01 02:00:00.000000000 +0200
++++ tsocks-1.8/autogen.sh	2008-02-13 18:08:59.000000000 +0200
+@@ -0,0 +1,6 @@
++#!/bin/sh
++
++aclocal -I aclocal
++autoconf
++autoheader
++
+diff -Nru tsocks-1.8.orig/ChangeLog tsocks-1.8/ChangeLog
+--- tsocks-1.8.orig/ChangeLog	2002-05-18 08:22:26.000000000 +0300
++++ tsocks-1.8/ChangeLog	2008-02-13 18:08:59.000000000 +0200
+@@ -1,3 +1,7 @@
++version 1.80tordns - 2005.10.4 bls@totalinfosecurity.com
++   Intercept gethostbyname() and friends, added --tordns
++   option for better name resolution with Tor.
++
+ version 1.80Beta5 - 2002.?.?? delius@progsoc.uts.edu.au
+    Intercept close() to fix problems with tsocks and 
+       kmail 
+diff -Nru tsocks-1.8.orig/common.c tsocks-1.8/common.c
+--- tsocks-1.8.orig/common.c	2002-07-16 01:35:06.000000000 +0300
++++ tsocks-1.8/common.c	2008-02-13 18:08:59.000000000 +0200
+@@ -78,6 +78,27 @@
+    logstamp = timestamp;
+ }
+ 
++/* Count the bits in a netmask.  This is a little bit buggy; it assumes 
++   all the zeroes are on the right... */
++
++int count_netmask_bits(uint32_t mask)
++{
++    int i;
++    int nbits = 0;
++
++    for(i=0; i<32; i++) {
++        if((mask >> i) & 1) {
++            nbits++;
++        } 
++    }
++    mask = ~mask;
++    mask = ntohl(mask);
++    if(mask & (mask+1)) {
++        return -1;  /* Noncontiguous */
++    }
++    return nbits;
++}
++
+ void show_msg(int level, char *fmt, ...) {
+ 	va_list ap;
+ 	int saveerr;
+@@ -107,7 +128,7 @@
+       fprintf(logfile, "%s ", timestring);
+    }
+ 
+-   fputs(progname, logfile);
++   // fputs(progname, logfile);
+ 
+    if (logstamp) {
+       fprintf(logfile, "(%d)", getpid());
+diff -Nru tsocks-1.8.orig/common.h tsocks-1.8/common.h
+--- tsocks-1.8.orig/common.h	2002-07-16 01:27:00.000000000 +0300
++++ tsocks-1.8/common.h	2008-02-13 18:08:59.000000000 +0200
+@@ -2,6 +2,7 @@
+ 
+ void set_log_options(int, char *, int);
+ void show_msg(int level, char *, ...);
++int count_netmask_bits(uint32_t mask);
+ unsigned int resolve_ip(char *, int, int);
+ 
+ #define MSGNONE   -1
+diff -Nru tsocks-1.8.orig/config.h.in tsocks-1.8/config.h.in
+--- tsocks-1.8.orig/config.h.in	2002-05-18 07:59:42.000000000 +0300
++++ tsocks-1.8/config.h.in	2008-02-13 18:08:59.000000000 +0200
+@@ -1,7 +1,5 @@
+-/* config.h.in.  Generated automatically from configure.in by autoheader.  */
+-
+-/* Define if you have the ANSI C header files.  */
+-#undef STDC_HEADERS
++/* config.h.in.  Generated from configure.in by autoheader.  */
++/* accconfig.h -- `autoheader' will generate config.h.in for tsocks . */
+ 
+ /* Allow tsocks to generate messages to stderr when errors are
+ encountered, this is really important and should only be disabled if
+@@ -51,6 +49,14 @@
+ #undef HAVE_INET_ADDR
+ #undef HAVE_INET_ATON
+ 
++/* We use strsep which isn't on all machines, but we provide our own
++definition of it for those which don't have it, this causes us to define
++our version */
++#undef DEFINE_STRSEP
++
++/* Should we resolve DNS entries in a way which works well with tor? */
++#undef USE_TOR_DNS
++
+ /* Allow the use of DNS names in the socks configuration file for socks
+ servers. This doesn't work if socksified DNS is enabled for obvious
+ reasons, it also introduces overhead, but people seem to want it */
+@@ -63,26 +69,88 @@
+ /* Location of configuration file (typically /etc/tsocks.conf) */
+ #undef CONF_FILE 
+ 
+-/* Define if you have the strcspn function.  */
++/* Define to indicate the correct signature for gethostbyname_r */
++#undef HAVE_FUNC_GETHOSTBYNAME_R_6
++#undef HAVE_FUNC_GETHOSTBYNAME_R_5
++#undef HAVE_FUNC_GETHOSTBYNAME_R_3
++
++/* Signatures for name resolution stuff */
++#undef GETHOSTBYNAME_SIGNATURE
++#undef GETADDRINFO_SIGNATURE
++#undef GETIPNODEBYNAME_SIGNATURE
++
++
++/* Define to 1 if you have the <inttypes.h> header file. */
++#undef HAVE_INTTYPES_H
++
++/* Define to 1 if you have the `dl' library (-ldl). */
++#undef HAVE_LIBDL
++
++/* Define to 1 if you have the `socket' library (-lsocket). */
++#undef HAVE_LIBSOCKET
++
++/* Define to 1 if you have the <memory.h> header file. */
++#undef HAVE_MEMORY_H
++
++/* Define to 1 if you have the `mmap' function. */
++#undef HAVE_MMAP
++
++/* Define to 1 if you have the <stdint.h> header file. */
++#undef HAVE_STDINT_H
++
++/* Define to 1 if you have the <stdlib.h> header file. */
++#undef HAVE_STDLIB_H
++
++/* Define to 1 if you have the `strcasecmp' function. */
++#undef HAVE_STRCASECMP
++
++/* Define to 1 if you have the `strcspn' function. */
+ #undef HAVE_STRCSPN
+ 
+-/* Define if you have the strdup function.  */
++/* Define to 1 if you have the `strdup' function. */
+ #undef HAVE_STRDUP
+ 
+-/* Define if you have the strerror function.  */
++/* Define to 1 if you have the `strerror' function. */
+ #undef HAVE_STRERROR
+ 
+-/* Define if you have the strspn function.  */
++/* Define to 1 if you have the <strings.h> header file. */
++#undef HAVE_STRINGS_H
++
++/* Define to 1 if you have the <string.h> header file. */
++#undef HAVE_STRING_H
++
++/* Define to 1 if you have the `strncasecmp' function. */
++#undef HAVE_STRNCASECMP
++
++/* Define to 1 if you have the `strspn' function. */
+ #undef HAVE_STRSPN
+ 
+-/* Define if you have the strtol function.  */
++/* Define to 1 if you have the `strtol' function. */
+ #undef HAVE_STRTOL
+ 
+-/* Define if you have the <unistd.h> header file.  */
++/* Define to 1 if you have the <sys/stat.h> header file. */
++#undef HAVE_SYS_STAT_H
++
++/* Define to 1 if you have the <sys/types.h> header file. */
++#undef HAVE_SYS_TYPES_H
++
++/* Define to 1 if you have the <unistd.h> header file. */
+ #undef HAVE_UNISTD_H
+ 
+-/* Define if you have the dl library (-ldl).  */
+-#undef HAVE_LIBDL
++/* Define to the address where bug reports for this package should be sent. */
++#undef PACKAGE_BUGREPORT
+ 
+-/* Define if you have the socket library (-lsocket).  */
+-#undef HAVE_LIBSOCKET
++/* Define to the full name of this package. */
++#undef PACKAGE_NAME
++
++/* Define to the full name and version of this package. */
++#undef PACKAGE_STRING
++
++/* Define to the one symbol short name of this package. */
++#undef PACKAGE_TARNAME
++
++/* Define to the version of this package. */
++#undef PACKAGE_VERSION
++
++/* Define to 1 if you have the ANSI C header files. */
++#undef STDC_HEADERS
+diff -Nru tsocks-1.8.orig/config.status tsocks-1.8/config.status
+--- tsocks-1.8.orig/config.status	2002-07-16 01:51:14.000000000 +0300
++++ tsocks-1.8/config.status	1970-01-01 02:00:00.000000000 +0200
+@@ -1,312 +0,0 @@
+-#! /bin/sh
+-# Generated automatically by configure.
+-# Run this file to recreate the current configuration.
+-# This directory was configured as follows,
+-# on host cardini.homenet:
+-#
+-# ./configure 
+-#
+-# Compiler output produced by configure, useful for debugging
+-# configure, is in ./config.log if it exists.
+-
+-ac_cs_usage="Usage: ./config.status [--recheck] [--version] [--help]"
+-for ac_option
+-do
+-  case "$ac_option" in
+-  -recheck | --recheck | --rechec | --reche | --rech | --rec | --re | --r)
+-    echo "running ${CONFIG_SHELL-/bin/sh} ./configure  --no-create --no-recursion"
+-    exec ${CONFIG_SHELL-/bin/sh} ./configure  --no-create --no-recursion ;;
+-  -version | --version | --versio | --versi | --vers | --ver | --ve | --v)
+-    echo "./config.status generated by autoconf version 2.13"
+-    exit 0 ;;
+-  -help | --help | --hel | --he | --h)
+-    echo "$ac_cs_usage"; exit 0 ;;
+-  *) echo "$ac_cs_usage"; exit 1 ;;
+-  esac
+-done
+-
+-ac_given_srcdir=.
+-ac_given_INSTALL="/usr/bin/install -c"
+-
+-trap 'rm -fr Makefile config.h conftest*; exit 1' 1 2 15
+-
+-# Protect against being on the right side of a sed subst in config.status.
+-sed 's/%@/@@/; s/@%/@@/; s/%g$/@g/; /@g$/s/[\\&%]/\\&/g;
+- s/@@/%@/; s/@@/@%/; s/@g$/%g/' > conftest.subs <<\CEOF
+-/^[ 	]*VPATH[ 	]*=[^:]*$/d
+-
+-s%@SHELL@%/bin/sh%g
+-s%@CFLAGS@%-g -O2 -Wall%g
+-s%@CPPFLAGS@%%g
+-s%@CXXFLAGS@%%g
+-s%@FFLAGS@%%g
+-s%@DEFS@%-DHAVE_CONFIG_H%g
+-s%@LDFLAGS@%%g
+-s%@LIBS@% -lc%g
+-s%@exec_prefix@%${prefix}%g
+-s%@prefix@%/usr%g
+-s%@program_transform_name@%s,x,x,%g
+-s%@bindir@%${exec_prefix}/bin%g
+-s%@sbindir@%${exec_prefix}/sbin%g
+-s%@libexecdir@%${exec_prefix}/libexec%g
+-s%@datadir@%${prefix}/share%g
+-s%@sysconfdir@%${prefix}/etc%g
+-s%@sharedstatedir@%${prefix}/com%g
+-s%@localstatedir@%${prefix}/var%g
+-s%@libdir@%/lib%g
+-s%@includedir@%${prefix}/include%g
+-s%@oldincludedir@%/usr/include%g
+-s%@infodir@%${prefix}/info%g
+-s%@mandir@%${prefix}/man%g
+-s%@host@%i586-pc-linux-gnu%g
+-s%@host_alias@%i586-pc-linux-gnu%g
+-s%@host_cpu@%i586%g
+-s%@host_vendor@%pc%g
+-s%@host_os@%linux-gnu%g
+-s%@CC@%gcc%g
+-s%@INSTALL_PROGRAM@%${INSTALL}%g
+-s%@INSTALL_SCRIPT@%${INSTALL_PROGRAM}%g
+-s%@INSTALL_DATA@%${INSTALL} -m 644%g
+-s%@LN_S@%ln -s%g
+-s%@CPP@%gcc -E%g
+-s%@FIND@%%g
+-s%@TAIL@%%g
+-s%@SPECIALLIBS@%-ldl %g
+-
+-CEOF
+-
+-# Split the substitutions into bite-sized pieces for seds with
+-# small command number limits, like on Digital OSF/1 and HP-UX.
+-ac_max_sed_cmds=90 # Maximum number of lines to put in a sed script.
+-ac_file=1 # Number of current file.
+-ac_beg=1 # First line for current file.
+-ac_end=$ac_max_sed_cmds # Line after last line for current file.
+-ac_more_lines=:
+-ac_sed_cmds=""
+-while $ac_more_lines; do
+-  if test $ac_beg -gt 1; then
+-    sed "1,${ac_beg}d; ${ac_end}q" conftest.subs > conftest.s$ac_file
+-  else
+-    sed "${ac_end}q" conftest.subs > conftest.s$ac_file
+-  fi
+-  if test ! -s conftest.s$ac_file; then
+-    ac_more_lines=false
+-    rm -f conftest.s$ac_file
+-  else
+-    if test -z "$ac_sed_cmds"; then
+-      ac_sed_cmds="sed -f conftest.s$ac_file"
+-    else
+-      ac_sed_cmds="$ac_sed_cmds | sed -f conftest.s$ac_file"
+-    fi
+-    ac_file=`expr $ac_file + 1`
+-    ac_beg=$ac_end
+-    ac_end=`expr $ac_end + $ac_max_sed_cmds`
+-  fi
+-done
+-if test -z "$ac_sed_cmds"; then
+-  ac_sed_cmds=cat
+-fi
+-
+-CONFIG_FILES=${CONFIG_FILES-"Makefile"}
+-for ac_file in .. $CONFIG_FILES; do if test "x$ac_file" != x..; then
+-  # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
+-  case "$ac_file" in
+-  *:*) ac_file_in=`echo "$ac_file"|sed 's%[^:]*:%%'`
+-       ac_file=`echo "$ac_file"|sed 's%:.*%%'` ;;
+-  *) ac_file_in="${ac_file}.in" ;;
+-  esac
+-
+-  # Adjust a relative srcdir, top_srcdir, and INSTALL for subdirectories.
+-
+-  # Remove last slash and all that follows it.  Not all systems have dirname.
+-  ac_dir=`echo $ac_file|sed 's%/[^/][^/]*$%%'`
+-  if test "$ac_dir" != "$ac_file" && test "$ac_dir" != .; then
+-    # The file is in a subdirectory.
+-    test ! -d "$ac_dir" && mkdir "$ac_dir"
+-    ac_dir_suffix="/`echo $ac_dir|sed 's%^\./%%'`"
+-    # A "../" for each directory in $ac_dir_suffix.
+-    ac_dots=`echo $ac_dir_suffix|sed 's%/[^/]*%../%g'`
+-  else
+-    ac_dir_suffix= ac_dots=
+-  fi
+-
+-  case "$ac_given_srcdir" in
+-  .)  srcdir=.
+-      if test -z "$ac_dots"; then top_srcdir=.
+-      else top_srcdir=`echo $ac_dots|sed 's%/$%%'`; fi ;;
+-  /*) srcdir="$ac_given_srcdir$ac_dir_suffix"; top_srcdir="$ac_given_srcdir" ;;
+-  *) # Relative path.
+-    srcdir="$ac_dots$ac_given_srcdir$ac_dir_suffix"
+-    top_srcdir="$ac_dots$ac_given_srcdir" ;;
+-  esac
+-
+-  case "$ac_given_INSTALL" in
+-  [/$]*) INSTALL="$ac_given_INSTALL" ;;
+-  *) INSTALL="$ac_dots$ac_given_INSTALL" ;;
+-  esac
+-
+-  echo creating "$ac_file"
+-  rm -f "$ac_file"
+-  configure_input="Generated automatically from `echo $ac_file_in|sed 's%.*/%%'` by configure."
+-  case "$ac_file" in
+-  *Makefile*) ac_comsub="1i\\
+-# $configure_input" ;;
+-  *) ac_comsub= ;;
+-  esac
+-
+-  ac_file_inputs=`echo $ac_file_in|sed -e "s%^%$ac_given_srcdir/%" -e "s%:% $ac_given_srcdir/%g"`
+-  sed -e "$ac_comsub
+-s%@configure_input@%$configure_input%g
+-s%@srcdir@%$srcdir%g
+-s%@top_srcdir@%$top_srcdir%g
+-s%@INSTALL@%$INSTALL%g
+-" $ac_file_inputs | (eval "$ac_sed_cmds") > $ac_file
+-fi; done
+-rm -f conftest.s*
+-
+-# These sed commands are passed to sed as "A NAME B NAME C VALUE D", where
+-# NAME is the cpp macro being defined and VALUE is the value it is being given.
+-#
+-# ac_d sets the value in "#define NAME VALUE" lines.
+-ac_dA='s%^\([ 	]*\)#\([ 	]*define[ 	][ 	]*\)'
+-ac_dB='\([ 	][ 	]*\)[^ 	]*%\1#\2'
+-ac_dC='\3'
+-ac_dD='%g'
+-# ac_u turns "#undef NAME" with trailing blanks into "#define NAME VALUE".
+-ac_uA='s%^\([ 	]*\)#\([ 	]*\)undef\([ 	][ 	]*\)'
+-ac_uB='\([ 	]\)%\1#\2define\3'
+-ac_uC=' '
+-ac_uD='\4%g'
+-# ac_e turns "#undef NAME" without trailing blanks into "#define NAME VALUE".
+-ac_eA='s%^\([ 	]*\)#\([ 	]*\)undef\([ 	][ 	]*\)'
+-ac_eB='$%\1#\2define\3'
+-ac_eC=' '
+-ac_eD='%g'
+-
+-if test "${CONFIG_HEADERS+set}" != set; then
+-  CONFIG_HEADERS="config.h"
+-fi
+-for ac_file in .. $CONFIG_HEADERS; do if test "x$ac_file" != x..; then
+-  # Support "outfile[:infile[:infile...]]", defaulting infile="outfile.in".
+-  case "$ac_file" in
+-  *:*) ac_file_in=`echo "$ac_file"|sed 's%[^:]*:%%'`
+-       ac_file=`echo "$ac_file"|sed 's%:.*%%'` ;;
+-  *) ac_file_in="${ac_file}.in" ;;
+-  esac
+-
+-  echo creating $ac_file
+-
+-  rm -f conftest.frag conftest.in conftest.out
+-  ac_file_inputs=`echo $ac_file_in|sed -e "s%^%$ac_given_srcdir/%" -e "s%:% $ac_given_srcdir/%g"`
+-  cat $ac_file_inputs > conftest.in
+-
+-  cat > conftest.frag <<CEOF
+-${ac_dA}CONF_FILE${ac_dB}CONF_FILE${ac_dC}"/etc/tsocks.conf"${ac_dD}
+-${ac_uA}CONF_FILE${ac_uB}CONF_FILE${ac_uC}"/etc/tsocks.conf"${ac_uD}
+-${ac_eA}CONF_FILE${ac_eB}CONF_FILE${ac_eC}"/etc/tsocks.conf"${ac_eD}
+-${ac_dA}STDC_HEADERS${ac_dB}STDC_HEADERS${ac_dC}1${ac_dD}
+-${ac_uA}STDC_HEADERS${ac_uB}STDC_HEADERS${ac_uC}1${ac_uD}
+-${ac_eA}STDC_HEADERS${ac_eB}STDC_HEADERS${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_UNISTD_H${ac_dB}HAVE_UNISTD_H${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_UNISTD_H${ac_uB}HAVE_UNISTD_H${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_UNISTD_H${ac_eB}HAVE_UNISTD_H${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_STRCSPN${ac_dB}HAVE_STRCSPN${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_STRCSPN${ac_uB}HAVE_STRCSPN${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_STRCSPN${ac_eB}HAVE_STRCSPN${ac_eC}1${ac_eD}
+-CEOF
+-  sed -f conftest.frag conftest.in > conftest.out
+-  rm -f conftest.in
+-  mv conftest.out conftest.in
+-
+-  cat > conftest.frag <<CEOF
+-${ac_dA}HAVE_STRDUP${ac_dB}HAVE_STRDUP${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_STRDUP${ac_uB}HAVE_STRDUP${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_STRDUP${ac_eB}HAVE_STRDUP${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_STRERROR${ac_dB}HAVE_STRERROR${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_STRERROR${ac_uB}HAVE_STRERROR${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_STRERROR${ac_eB}HAVE_STRERROR${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_STRSPN${ac_dB}HAVE_STRSPN${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_STRSPN${ac_uB}HAVE_STRSPN${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_STRSPN${ac_eB}HAVE_STRSPN${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_STRTOL${ac_dB}HAVE_STRTOL${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_STRTOL${ac_uB}HAVE_STRTOL${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_STRTOL${ac_eB}HAVE_STRTOL${ac_eC}1${ac_eD}
+-CEOF
+-  sed -f conftest.frag conftest.in > conftest.out
+-  rm -f conftest.in
+-  mv conftest.out conftest.in
+-
+-  cat > conftest.frag <<CEOF
+-${ac_dA}HAVE_INET_ATON${ac_dB}HAVE_INET_ATON${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_INET_ATON${ac_uB}HAVE_INET_ATON${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_INET_ATON${ac_eB}HAVE_INET_ATON${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_GETHOSTBYNAME${ac_dB}HAVE_GETHOSTBYNAME${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_GETHOSTBYNAME${ac_uB}HAVE_GETHOSTBYNAME${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_GETHOSTBYNAME${ac_eB}HAVE_GETHOSTBYNAME${ac_eC}1${ac_eD}
+-${ac_dA}HAVE_LIBDL${ac_dB}HAVE_LIBDL${ac_dC}1${ac_dD}
+-${ac_uA}HAVE_LIBDL${ac_uB}HAVE_LIBDL${ac_uC}1${ac_uD}
+-${ac_eA}HAVE_LIBDL${ac_eB}HAVE_LIBDL${ac_eC}1${ac_eD}
+-${ac_dA}ALLOW_ENV_CONFIG${ac_dB}ALLOW_ENV_CONFIG${ac_dC}1${ac_dD}
+-${ac_uA}ALLOW_ENV_CONFIG${ac_uB}ALLOW_ENV_CONFIG${ac_uC}1${ac_uD}
+-${ac_eA}ALLOW_ENV_CONFIG${ac_eB}ALLOW_ENV_CONFIG${ac_eC}1${ac_eD}
+-CEOF
+-  sed -f conftest.frag conftest.in > conftest.out
+-  rm -f conftest.in
+-  mv conftest.out conftest.in
+-
+-  cat > conftest.frag <<CEOF
+-${ac_dA}ALLOW_MSG_OUTPUT${ac_dB}ALLOW_MSG_OUTPUT${ac_dC}1${ac_dD}
+-${ac_uA}ALLOW_MSG_OUTPUT${ac_uB}ALLOW_MSG_OUTPUT${ac_uC}1${ac_uD}
+-${ac_eA}ALLOW_MSG_OUTPUT${ac_eB}ALLOW_MSG_OUTPUT${ac_eC}1${ac_eD}
+-${ac_dA}HOSTNAMES${ac_dB}HOSTNAMES${ac_dC}1${ac_dD}
+-${ac_uA}HOSTNAMES${ac_uB}HOSTNAMES${ac_uC}1${ac_uD}
+-${ac_eA}HOSTNAMES${ac_eB}HOSTNAMES${ac_eC}1${ac_eD}
+-${ac_dA}SELECT_SIGNATURE${ac_dB}SELECT_SIGNATURE${ac_dC}int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout${ac_dD}
+-${ac_uA}SELECT_SIGNATURE${ac_uB}SELECT_SIGNATURE${ac_uC}int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout${ac_uD}
+-${ac_eA}SELECT_SIGNATURE${ac_eB}SELECT_SIGNATURE${ac_eC}int n, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout${ac_eD}
+-${ac_dA}CONNECT_SIGNATURE${ac_dB}CONNECT_SIGNATURE${ac_dC}int __fd, const struct sockaddr_in * __addr, socklen_t __len${ac_dD}
+-${ac_uA}CONNECT_SIGNATURE${ac_uB}CONNECT_SIGNATURE${ac_uC}int __fd, const struct sockaddr_in * __addr, socklen_t __len${ac_uD}
+-${ac_eA}CONNECT_SIGNATURE${ac_eB}CONNECT_SIGNATURE${ac_eC}int __fd, const struct sockaddr_in * __addr, socklen_t __len${ac_eD}
+-CEOF
+-  sed -f conftest.frag conftest.in > conftest.out
+-  rm -f conftest.in
+-  mv conftest.out conftest.in
+-
+-  cat > conftest.frag <<CEOF
+-${ac_dA}CONNECT_SOCKARG${ac_dB}CONNECT_SOCKARG${ac_dC}struct sockaddr_in *${ac_dD}
+-${ac_uA}CONNECT_SOCKARG${ac_uB}CONNECT_SOCKARG${ac_uC}struct sockaddr_in *${ac_uD}
+-${ac_eA}CONNECT_SOCKARG${ac_eB}CONNECT_SOCKARG${ac_eC}struct sockaddr_in *${ac_eD}
+-${ac_dA}CLOSE_SIGNATURE${ac_dB}CLOSE_SIGNATURE${ac_dC}int fd${ac_dD}
+-${ac_uA}CLOSE_SIGNATURE${ac_uB}CLOSE_SIGNATURE${ac_uC}int fd${ac_uD}
+-${ac_eA}CLOSE_SIGNATURE${ac_eB}CLOSE_SIGNATURE${ac_eC}int fd${ac_eD}
+-${ac_dA}POLL_SIGNATURE${ac_dB}POLL_SIGNATURE${ac_dC}struct pollfd *ufds, unsigned long nfds, int timeout${ac_dD}
+-${ac_uA}POLL_SIGNATURE${ac_uB}POLL_SIGNATURE${ac_uC}struct pollfd *ufds, unsigned long nfds, int timeout${ac_uD}
+-${ac_eA}POLL_SIGNATURE${ac_eB}POLL_SIGNATURE${ac_eC}struct pollfd *ufds, unsigned long nfds, int timeout${ac_eD}
+-s%^[ 	]*#[ 	]*undef[ 	][ 	]*[a-zA-Z_][a-zA-Z_0-9]*%/* & */%
+-CEOF
+-  sed -f conftest.frag conftest.in > conftest.out
+-  rm -f conftest.in
+-  mv conftest.out conftest.in
+-
+-  rm -f conftest.frag conftest.h
+-  echo "/* $ac_file.  Generated automatically by configure.  */" > conftest.h
+-  cat conftest.in >> conftest.h
+-  rm -f conftest.in
+-  if cmp -s $ac_file conftest.h 2>/dev/null; then
+-    echo "$ac_file is unchanged"
+-    rm -f conftest.h
+-  else
+-    # Remove last slash and all that follows it.  Not all systems have dirname.
+-      ac_dir=`echo $ac_file|sed 's%/[^/][^/]*$%%'`
+-      if test "$ac_dir" != "$ac_file" && test "$ac_dir" != .; then
+-      # The file is in a subdirectory.
+-      test ! -d "$ac_dir" && mkdir "$ac_dir"
+-    fi
+-    rm -f $ac_file
+-    mv conftest.h $ac_file
+-  fi
+-fi; done
+-
+-
+-
+-exit 0
+diff -Nru tsocks-1.8.orig/configure.in tsocks-1.8/configure.in
+--- tsocks-1.8.orig/configure.in	2008-02-13 18:08:20.000000000 +0200
++++ tsocks-1.8/configure.in	2008-02-13 18:08:59.000000000 +0200
+@@ -13,13 +13,15 @@
+ 
+ dnl Arguments we allow
+ AC_ARG_ENABLE(socksdns,
+-[  --enable-socksdns	      force dns lookups to use tcp ])
++[  --enable-socksdns       force dns lookups to use tcp ])
++AC_ARG_ENABLE(tordns,
++[  --disable-tordns         don't override name lookup calls to use SOCKS ])   
+ AC_ARG_ENABLE(debug,
+ [  --disable-debug         disable ALL error messages from tsocks ])
+ AC_ARG_ENABLE(oldmethod,
+-[  --enable-oldmethod	   use the old method to override connect ])
++[  --enable-oldmethod      use the old method to override connect ])
+ AC_ARG_ENABLE(hostnames,
+-[  --disable-hostnames	   disable hostname lookups for socks servers ])
++[  --enable-hostnames      enable hostname lookups for socks servers ])
+ AC_ARG_ENABLE(envconf,
+ [  --disable-envconf       do not allow TSOCKS_CONF_FILE to specify configuration file ])
+ AC_ARG_WITH(conf,
+@@ -70,12 +72,19 @@
+ dnl Check for the poll header
+ AC_CHECK_HEADER(sys/poll.h,,AC_MSG_ERROR("sys/poll.h not found"))
+ 
++dnl Check for the mmap header
++AC_CHECK_HEADER(sys/mman.h,,AC_MSG_ERROR("sys/mman.h not found"))
++
+ dnl Other headers we're interested in
+ AC_CHECK_HEADERS(unistd.h)
+ 
+ dnl Checks for library functions.
+-AC_CHECK_FUNCS(strcspn strdup strerror strspn strtol,,[ 
+-	       AC_MSG_ERROR("Required function not found")])
++AC_CHECK_FUNCS(strcspn strdup strerror strspn strtol mmap strcasecmp \
++   strncasecmp strtol,,[AC_MSG_ERROR("Required function not found")])
++
++dnl Find which version of gethostbyname_r we should be using (actually this
++dnl isn't used right now).
++AX_FUNC_WHICH_GETHOSTBYNAME_R
+ 
+ dnl First find the library that contains connect() (obviously
+ dnl the most important library for us). Once we've found it
+@@ -158,6 +167,17 @@
+   AC_DEFINE(USE_SOCKS_DNS)
+ fi
+ 
++AC_MSG_CHECKING(whether to enable tordns)
++if test "x${enable_tordns}" != "xno"; then
++  AC_DEFINE(USE_TOR_DNS)
++  DEADPOOL_O="\${DEADPOOL}.o"
++  AC_MSG_RESULT(yes)
++else 
++  DEADPOOL_O=""
++  AC_MSG_RESULT(no)
++fi
++AC_SUBST(DEADPOOL_O)
++
+ if test "x${enable_envconf}" = "x"; then
+   AC_DEFINE(ALLOW_ENV_CONFIG)
+ fi
+@@ -171,13 +191,18 @@
+   AC_DEFINE(ALLOW_MSG_OUTPUT)
+ fi
+ 
+-if test "x${enable_hostnames}" = "x"; then
++if test "x${enable_hostnames}" = "xyes"; then
+   AC_DEFINE(HOSTNAMES)
+ fi
+ 
+ if test "${enable_socksdns}" = "yes" -a \
+-        "x${enable_hostnames}" = "x" ; then
+-  AC_MSG_ERROR("--enable-socksdns is not valid without --disable-hostnames")
++        "x${enable_hostnames}" = "xyes" ; then
++  AC_MSG_ERROR("--enable-socksdns is not valid with --enable-hostnames")
++fi
++
++if test "x${enable_tordns}" != "xno" -a \
++        "x${enable_hostnames}" = "xyes" ; then
++  AC_MSG_ERROR("--enable-tordns is not valid with --enable-hostnames")
+ fi
+ 
+ dnl If we have to use the old method of overriding connect (i.e no
+@@ -327,6 +352,18 @@
+ AC_MSG_RESULT([poll(${PROTO})])
+ AC_DEFINE_UNQUOTED(POLL_SIGNATURE, [${PROTO}])
+ 
++dnl Emit signature for gethostbyname
++PROTO="const char *name"
++AC_DEFINE_UNQUOTED(GETHOSTBYNAME_SIGNATURE, [${PROTO}])
++
++dnl Emit signature for getaddrinfo
++PROTO="const char *node, const char *service, void *hints, void *res"
++AC_DEFINE_UNQUOTED(GETADDRINFO_SIGNATURE, [${PROTO}])
++
++dnl Emit signature for getipnodebyname
++PROTO="const char *name, int af, int flags, int *error_num"
++AC_DEFINE_UNQUOTED(GETIPNODEBYNAME_SIGNATURE, [${PROTO}])
++
+ dnl Output the special librarys (libdl etc needed for tsocks)
+ SPECIALLIBS=${LIBS}
+ AC_SUBST(SPECIALLIBS)
+diff -Nru tsocks-1.8.orig/dead_pool.c tsocks-1.8/dead_pool.c
+--- tsocks-1.8.orig/dead_pool.c	1970-01-01 02:00:00.000000000 +0200
++++ tsocks-1.8/dead_pool.c	2008-02-13 18:08:59.000000000 +0200
+@@ -0,0 +1,545 @@
++#include <stdio.h>
++#include <sys/socket.h>
++#include <netinet/in.h>
++#include <arpa/inet.h>
++#include <netdb.h>
++#include <stdlib.h>
++#include <string.h>
++#include <sys/mman.h>
++#include "common.h"
++#include "dead_pool.h"
++
++#ifndef MAP_ANONYMOUS
++# define MAP_ANONYMOUS MAP_ANON
++#endif
++
++int store_pool_entry(dead_pool *pool, char *hostname, struct in_addr *addr);
++void get_next_dead_address(dead_pool *pool, uint32_t *result);
++
++static int
++do_resolve(const char *hostname, uint32_t sockshost, uint16_t socksport,
++           uint32_t *result_addr);
++
++/* Compares the last strlen(s2) characters of s1 with s2.  Returns as for
++   strcasecmp. */
++static int 
++strcasecmpend(const char *s1, const char *s2)
++{
++   size_t n1 = strlen(s1), n2 = strlen(s2);
++   if (n2>n1) /* then they can't be the same; figure out which is bigger */
++       return strcasecmp(s1,s2);
++   else
++       return strncasecmp(s1+(n1-n2), s2, n2);
++}
++
++dead_pool *
++init_pool(int pool_size, struct in_addr deadrange_base, 
++    struct in_addr deadrange_mask, char *sockshost, uint16_t socksport)
++{
++    int i, deadrange_bits, deadrange_width, deadrange_size;
++    struct in_addr socks_server;
++    dead_pool *newpool = NULL;
++
++    /* Count bits in netmask and determine deadrange width. */
++    deadrange_bits = count_netmask_bits(deadrange_mask.s_addr);
++    if(deadrange_bits == -1) {
++        show_msg(MSGERR, "init_pool: invalid netmask for deadrange\n");
++        return NULL;
++    } 
++    deadrange_width = 32 - deadrange_bits;
++
++    show_msg(MSGDEBUG, "deadrange width is %d bits\n", deadrange_width);
++
++    /* Now work out how many IPs are available in the deadrange and check
++       that this number makes sense.  If the deadpool is bigger than the 
++       deadrange we shrink the pool. */
++
++    for(i=0, deadrange_size = 1; i < deadrange_width; i++) {
++        deadrange_size *= 2;
++    }
++
++    if(deadrange_size < pool_size) {
++        show_msg(MSGWARN, "tordns cache size was %d, but deadrange size is %d: "
++                 "shrinking pool size to %d entries\n", pool_size, 
++                 deadrange_size, deadrange_size);
++        pool_size = deadrange_size;
++    }
++    if(pool_size < 1) {
++        show_msg(MSGERR, "tordns cache size is 0, disabling tordns\n");
++        return NULL;
++    }
++
++    /* Allocate space for the dead_pool structure */
++    newpool = (dead_pool *) mmap(0, sizeof(dead_pool), 
++                   PROT_READ | PROT_WRITE, 
++                   MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
++    if(!newpool) {
++        show_msg(MSGERR, "init_pool: unable to mmap deadpool "
++                 "(tried to map %d bytes)\n", sizeof(dead_pool));
++        return NULL;
++    }
++
++    /* Initialize the dead_pool structure */
++#ifdef HAVE_INET_ATON
++    inet_aton(sockshost, &socks_server);
++#elif defined(HAVE_INET_ADDR)
++    socks_server.s_addr = inet_addr(sockshost);
++#endif
++    newpool->sockshost = ntohl(socks_server.s_addr);
++    newpool->socksport = socksport;
++    newpool->deadrange_base = ntohl(deadrange_base.s_addr);
++    newpool->deadrange_mask = ntohl(deadrange_mask.s_addr);
++    newpool->deadrange_size = deadrange_size;
++    newpool->write_pos = 0;
++    newpool->dead_pos = 0;
++    newpool->n_entries = pool_size;
++
++    /* Allocate space for the entries */
++    newpool->entries = (pool_ent *) mmap(0, newpool->n_entries * sizeof(pool_ent), 
++                            PROT_READ | PROT_WRITE, 
++                            MAP_SHARED | MAP_ANONYMOUS, -1, 0); 
++    if(!newpool->entries) {
++        munmap((void *)newpool, sizeof(dead_pool));
++        show_msg(MSGERR, "init_pool: unable to mmap deadpool entries "
++                 "(tried to map %d bytes)\n", 
++                 newpool->n_entries * sizeof(pool_ent)); 
++        return NULL;
++    }
++
++    /* Initialize the entries */
++    for(i=0; i < newpool->n_entries; i++) {
++        newpool->entries[i].ip = -1;
++        newpool->entries[i].name[0] = '\0';
++    }
++
++    return newpool;
++}
++
++int 
++is_dead_address(dead_pool *pool, uint32_t addr) 
++{
++    uint32_t haddr = ntohl(addr);
++    if(pool == NULL) {
++        return 0;
++    }
++    return (pool->deadrange_base == (haddr & pool->deadrange_mask));
++}
++
++void
++get_next_dead_address(dead_pool *pool, uint32_t *result)
++{
++    *result = htonl(pool->deadrange_base + pool->dead_pos++);
++    if(pool->dead_pos >= pool->deadrange_size) {
++        pool->dead_pos = 0;
++    }
++}
++
++int 
++store_pool_entry(dead_pool *pool, char *hostname, struct in_addr *addr)
++{
++  int position = pool->write_pos;
++  int oldpos;
++  int rc;
++  uint32_t intaddr;
++
++  show_msg(MSGDEBUG, "store_pool_entry: storing '%s'\n", hostname);
++  show_msg(MSGDEBUG, "store_pool_entry: write pos is: %d\n", pool->write_pos);
++
++  /* Check to see if name already exists in pool */
++  oldpos = search_pool_for_name(pool, hostname);
++  if(oldpos != -1){
++      show_msg(MSGDEBUG, "store_pool_entry: not storing (entry exists)\n");
++      addr->s_addr = pool->entries[oldpos].ip;
++      return oldpos;
++  }
++
++  /* If this is a .onion host, then we return a bogus ip from our deadpool, 
++     otherwise we try to resolve it and store the 'real' IP */
++  if(strcasecmpend(hostname, ".onion") == 0) {
++      get_next_dead_address(pool, &pool->entries[position].ip);
++  } else {
++      rc = do_resolve(hostname, pool->sockshost, pool->socksport, &intaddr);
++      if(rc != 0) {
++          show_msg(MSGWARN, "failed to resolve: %s\n", hostname);
++          return -1;
++      } 
++      if(is_dead_address(pool, intaddr)) {
++          show_msg(MSGERR, "resolved %s -> %d (deadpool address) IGNORED\n");
++          return -1;
++      }
++      pool->entries[position].ip = intaddr;
++  }
++
++  strncpy(pool->entries[position].name, hostname, 255);
++  pool->entries[position].name[255] = '\0';
++  pool->write_pos++;
++  if(pool->write_pos >= pool->n_entries) {
++      pool->write_pos = 0;
++  }
++  addr->s_addr = pool->entries[position].ip;
++
++  show_msg(MSGDEBUG, "store_pool_entry: stored entry in slot '%d'\n", position);
++
++  return position;
++}
++
++int 
++search_pool_for_name(dead_pool *pool, const char *name) 
++{
++  int i;
++  for(i=0; i < pool->n_entries; i++){
++    if(strcmp(name, pool->entries[i].name) == 0){
++      return i;
++    }
++  }
++  return -1;
++}
++
++char *
++get_pool_entry(dead_pool *pool, struct in_addr *addr)
++{
++  int i;
++  uint32_t intaddr = addr->s_addr;
++
++  if(pool == NULL) {
++      return NULL;
++  }
++
++  show_msg(MSGDEBUG, "get_pool_entry: searching for: %s\n", inet_ntoa(*addr));
++  for(i=0; i<pool->n_entries; i++) {
++    if(intaddr == pool->entries[i].ip) {
++        show_msg(MSGDEBUG, "get_pool_entry: found: %s\n", pool->entries[i].name);
++        return pool->entries[i].name;
++    }
++  }
++  show_msg(MSGDEBUG, "get_pool_entry: address not found\n");
++
++  return NULL;
++}
++
++static int
++build_socks4a_resolve_request(char **out,
++                              const char *username,
++                              const char *hostname)
++{
++  size_t len;
++  uint16_t port = htons(0);  /* port: 0. */
++  uint32_t addr = htonl(0x00000001u); /* addr: 0.0.0.1 */
++
++  len = 8 + strlen(username) + 1 + strlen(hostname) + 1;
++  *out = malloc(len);
++  (*out)[0] = 4;      /* SOCKS version 4 */
++  (*out)[1] = '\xF0'; /* Command: resolve. */
++
++  memcpy((*out)+2, &port, sizeof(port));
++  memcpy((*out)+4, &addr, sizeof(addr));
++  strcpy((*out)+8, username);
++  strcpy((*out)+8+strlen(username)+1, hostname);
++
++  return len;
++}
++
++#define RESPONSE_LEN 8
++
++static int
++parse_socks4a_resolve_response(const char *response, size_t len,
++                               uint32_t *addr_out)
++{
++  uint8_t status;
++  uint16_t port;
++
++  if (len < RESPONSE_LEN) {
++    show_msg(MSGWARN,"Truncated socks response.\n"); 
++    return -1;
++  }
++  if (((uint8_t)response[0])!=0) { /* version: 0 */
++    show_msg(MSGWARN,"Nonzero version in socks response: bad format.\n");
++    return -1;
++  }
++  status = (uint8_t)response[1];
++
++  memcpy(&port, response+2, sizeof(port));
++  if (port!=0) { /* port: 0 */
++    show_msg(MSGWARN,"Nonzero port in socks response: bad format.\n"); 
++    return -1;
++  }
++  if (status != 90) {
++    show_msg(MSGWARN,"Bad status: socks request failed.\n"); 
++    return -1;
++  }
++
++  memcpy(addr_out, response+4, sizeof(*addr_out));
++
++  return 0;
++}
++
++static int
++do_resolve(const char *hostname, uint32_t sockshost, uint16_t socksport,
++           uint32_t *result_addr)
++{
++  int s;
++  struct sockaddr_in socksaddr;
++  char *req, *cp;
++  int r, len;
++  char response_buf[RESPONSE_LEN];
++
++  show_msg(MSGDEBUG, "do_resolve: resolving %s\n", hostname);
++
++  s = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
++  if (s<0) {
++    show_msg(MSGWARN, "do_resolve: problem creating socket\n"); 
++    return -1;
++  }
++
++  memset(&socksaddr, 0, sizeof(socksaddr));
++  socksaddr.sin_family = AF_INET;
++  socksaddr.sin_port = htons(socksport);
++  socksaddr.sin_addr.s_addr = htonl(sockshost);
++  if (realconnect(s, (struct sockaddr*)&socksaddr, sizeof(socksaddr))) {
++    show_msg(MSGWARN, "do_resolve: error connecting to SOCKS server\n");
++    return -1;
++  }
++
++  if ((len = build_socks4a_resolve_request(&req, "", hostname))<0) {
++    show_msg(MSGWARN, "do_resolve: error generating SOCKS request\n"); 
++    return -1;
++  }
++
++  cp = req;
++  while (len) {
++    r = send(s, cp, len, 0);
++    if (r<0) {
++      show_msg(MSGWARN, "do_resolve: error sending SOCKS request\n"); 
++      free(req);
++      return -1;
++    }
++    len -= r;
++    cp += r;
++  }
++  free(req);
++
++  len = 0;
++  while (len < RESPONSE_LEN) {
++    r = recv(s, response_buf+len, RESPONSE_LEN-len, 0);
++    if (r==0) {
++      show_msg(MSGWARN, "do_resolve: EOF while reading SOCKS response\n"); 
++      return -1;
++    }
++    if (r<0) {
++      show_msg(MSGWARN, "do_resolve: error reading SOCKS response\n"); 
++      return -1;
++    }
++    len += r;
++  }
++
++  realclose(s);
++
++  if (parse_socks4a_resolve_response(response_buf, RESPONSE_LEN, result_addr) < 0){
++    show_msg(MSGWARN, "do_resolve: error parsing SOCKS response\n");
++    return -1;
++  }
++
++  show_msg(MSGDEBUG, "do_resolve: success\n");
++
++  return 0;
++}
++
++struct hostent *
++our_gethostbyname(dead_pool *pool, const char *name)
++{
++  int pos;
++  static struct in_addr addr;
++  static struct hostent he;
++  static char *addrs[2];
++
++  show_msg(MSGDEBUG, "our_gethostbyname: '%s' requested\n", name);
++
++  pos = store_pool_entry(pool,(char *) name, &addr);
++  if(pos == -1) {
++      h_errno = HOST_NOT_FOUND;
++      return NULL;
++  }
++
++  addrs[0] = (char *)&addr;
++  addrs[1] = NULL;
++
++  he.h_name      = pool->entries[pos].name;
++  he.h_aliases   = NULL;
++  he.h_length    = 4;
++  he.h_addrtype  = AF_INET;
++  he.h_addr_list = addrs;
++
++  show_msg(MSGDEBUG, "our_gethostbyname: resolved '%s' to: '%s'\n", 
++           name, inet_ntoa(*((struct in_addr *)he.h_addr)));
++
++  return &he;
++}
++
++static struct hostent *
++alloc_hostent(int af)
++{
++    struct hostent *he = NULL;
++    char **addr_list = NULL;
++    void *addr = NULL;
++    char **aliases = NULL;
++
++    if(af != AF_INET && af != AF_INET6) {
++        return NULL;
++    }
++
++    /* Since the memory we allocate here will be free'd by freehostent and
++       that function is opaque to us, it's likely that we'll leak a little 
++       bit of memory here. */
++
++    he = malloc(sizeof(struct hostent));
++    addr_list = malloc(2 * sizeof(char *));
++    if(af == AF_INET6) {
++        addr = malloc(sizeof(struct in6_addr));
++    } else {
++        addr = malloc(sizeof(struct in_addr));
++    }
++    aliases = malloc(sizeof(char *));
++
++    if(he == NULL || addr_list == NULL || addr == NULL || aliases == NULL) {
++        if(he)
++            free(he);
++        if(addr_list)
++            free(addr_list);
++        if(addr)
++            free(addr);
++        if(aliases)
++            free(aliases);
++    }
++
++    he->h_name = NULL;
++    he->h_addr_list = addr_list;
++    he->h_addr_list[0] = addr;
++    he->h_addr_list[1] = NULL;
++    he->h_aliases = aliases;
++    he->h_aliases[0] = NULL;
++    he->h_length = af == AF_INET ? 4 : 16;
++    he->h_addrtype = af;
++
++    return he;
++}
++
++/* On Linux, there's no freehostent() anymore; we might as well implement
++   this ourselves. */
++
++static void
++free_hostent(struct hostent *he)
++{
++    int i;
++    if(he->h_name) {
++        free(he->h_name);
++    }
++    if(he->h_aliases) {
++        for(i=0; he->h_aliases[i] != NULL; i++) {
++            free(he->h_aliases[i]);
++        }
++        free(he->h_aliases);
++    }
++    if(he->h_addr_list) {
++        free(he->h_addr_list);
++    }
++    free(he);
++}
++
++int
++our_getaddrinfo(dead_pool *pool, const char *node, const char *service, 
++                void *hints, void *res)
++{
++    int pos;
++    struct in_addr addr;
++    char *ipstr;
++    int ret;
++
++    /* If "node" looks like a dotted-decimal ip address, then just call 
++       the real getaddrinfo; otherwise we'll need to get an address from 
++       our pool. */
++
++    /* TODO: work out what to do with AF_INET6 requests */
++
++#ifdef HAVE_INET_ATON
++    if(inet_aton(node, &addr) == 0) {
++#elif defined(HAVE_INET_ADDR)
++    /* If we're stuck with inet_addr, then getaddrinfo() won't work 
++       properly with 255.255.255.255 (= -1).  There's not much we can
++       do about this */
++    in_addr_t is_valid;
++    is_valid = inet_addr(node);
++    if(is_valid == -1) {
++#endif
++        pos = store_pool_entry(pool, (char *) node, &addr);
++        if(pos == -1) {
++            return EAI_NONAME;
++        } else {
++            ipstr = strdup(inet_ntoa(addr));
++            ret = realgetaddrinfo(ipstr, service, hints, res);
++            free(ipstr);
++        }
++    } else {
++        ret = realgetaddrinfo(node, service, hints, res);
++    }
++
++    return ret;
++}
++
++struct hostent *
++our_getipnodebyname(dead_pool *pool, const char *name, int af, int flags, 
++                    int *error_num)
++{
++    int pos;
++    struct hostent *he = NULL;
++    int want_4in6 = 0;
++    char addr_convert_buf[80];
++    struct in_addr pool_addr;
++
++    if(af == AF_INET6) {
++        /* Caller has requested an AF_INET6 address, and is not prepared to
++           accept IPv4-mapped IPV6 addresses. There's nothing we can do to
++           service their request. */
++        if((flags & AI_V4MAPPED) == 0) {
++            show_msg(MSGWARN, "getipnodebyname: asked for V6 addresses only, "
++                     "but tsocks can't handle that\n");
++            *error_num = NO_RECOVERY;
++            return NULL;
++        } else {
++            want_4in6 = 1;
++        }
++    }
++
++    pos = store_pool_entry(pool, (char *)name, &pool_addr);
++    if(pos == -1) {
++        *error_num = HOST_NOT_FOUND;
++        return NULL;
++    }
++
++    he = alloc_hostent(af);
++    if(he == NULL) {
++        show_msg(MSGERR, "getipnodebyname: failed to allocate hostent\n");
++        *error_num = NO_RECOVERY;
++        return NULL;
++    }
++
++    if(want_4in6) {
++        /* Convert the ipv4 address in *addr to an IPv4 in IPv6 mapped 
++           address. TODO: inet_ntoa() is thread-safe on Solaris but might
++           not be on other platforms. */
++        strcpy(addr_convert_buf, "::FFFF:");
++        strcpy(addr_convert_buf+7, inet_ntoa(pool_addr));
++        if(inet_pton(AF_INET6, addr_convert_buf, he->h_addr_list[0]) != 1) {
++            show_msg(MSGERR, "getipnodebyname: inet_pton() failed!\n");
++            free_hostent(he);
++            *error_num = NO_RECOVERY;
++            return NULL;
++        }
++    } else {
++        ((struct in_addr *) he->h_addr_list[0])->s_addr = pool_addr.s_addr;
++    }
++    he->h_name = strdup(name);
++
++    return he;
++}
++
++
+diff -Nru tsocks-1.8.orig/dead_pool.h tsocks-1.8/dead_pool.h
+--- tsocks-1.8.orig/dead_pool.h	1970-01-01 02:00:00.000000000 +0200
++++ tsocks-1.8/dead_pool.h	2008-02-13 18:08:59.000000000 +0200
+@@ -0,0 +1,44 @@
++#ifndef _DEAD_POOL_H
++#define _DEAD_POOL_H
++
++#include <config.h>
++
++extern int (*realconnect)(CONNECT_SIGNATURE);
++extern int (*realclose)(CLOSE_SIGNATURE);
++extern int (*realgetaddrinfo)(GETADDRINFO_SIGNATURE);
++
++struct struct_pool_ent {
++  unsigned int ip;
++  char name[256];
++};
++
++typedef struct struct_pool_ent pool_ent;
++
++struct struct_dead_pool {
++  pool_ent *entries;            /* Points to array of pool entries */
++  int n_entries;                /* Number of entries in the deadpool */
++  unsigned int deadrange_base;  /* Deadrange start IP in host byte order */
++  unsigned int deadrange_mask;  /* Deadrange netmask in host byte order */
++  unsigned int deadrange_size;  /* Number of IPs in the deadrange */
++  unsigned int write_pos;       /* Next position to use in the pool array */
++  unsigned int dead_pos;        /* Next 'unused' deadpool IP */
++  uint32_t sockshost;     
++  uint16_t socksport;
++  char pad[2];
++};
++
++typedef struct struct_dead_pool dead_pool;
++
++dead_pool *init_pool(int deadpool_size, struct in_addr deadrange_base, 
++    struct in_addr deadrange_mask, char *sockshost, uint16_t socksport);
++int is_dead_address(dead_pool *pool, uint32_t addr);
++char *get_pool_entry(dead_pool *pool, struct in_addr *addr);
++int search_pool_for_name(dead_pool *pool, const char *name);
++struct hostent *our_gethostbyname(dead_pool *pool, const char *name);
++int our_getaddrinfo(dead_pool *pool, const char *node, const char *service, 
++    void *hints, void *res);
++struct hostent *our_getipnodebyname(dead_pool *pool, const char *name, 
++    int af, int flags, int *error_num);
++
++#endif /* _DEAD_POOL_H */
++
+diff -Nru tsocks-1.8.orig/INSTALL tsocks-1.8/INSTALL
+--- tsocks-1.8.orig/INSTALL	2002-05-18 05:12:30.000000000 +0300
++++ tsocks-1.8/INSTALL	2008-02-13 18:08:59.000000000 +0200
+@@ -4,10 +4,15 @@
+ 1. Unpack the archive (though if you're reading this you've already
+ achieved that)
+ 
+-   tar -zxvf tsocks-<version>.tar.gx
++   tar -zxvf tsocks-<version>.tar.gz
++                 OR
++   tar -jxvf tsocks-<version>.tar.bz
+ 
+ 2. Run ./configure, options which might be of interest (and that are 
+    specific to tsocks include):
++	--disable-tordns	This option disables tordns, which causes
++				names to be looked up in a way designed to
++				work well with Tor.
+ 	--enable-socksdns	This option causes tsocks to intercept
+ 				DNS lookups and attempt to force them
+ 				to use TCP instead of UDP and thus
+@@ -26,10 +31,10 @@
+ 				to the libc shared library and then uses
+ 				dlsym(). Again this is not very elegant
+ 				and shouldn't be required.
+-	--disable-hostnames	This disables DNS lookups on names
++	--enable-hostnames	This enables DNS lookups on names
+ 				provided as socks servers in the config
+-				file. This option is necessary
+-				if socks dns is enabled since tsocks
++				file. This option is not compatible with
++				tordns or socks dns, since tsocks
+ 				can't send a socks dns request to resolve
+ 				the location of the socks server. 
+ 	--with-conf=<filename>	You can specify the location of the tsocks
+diff -Nru tsocks-1.8.orig/Makefile.in tsocks-1.8/Makefile.in
+--- tsocks-1.8.orig/Makefile.in	2008-02-13 18:06:49.000000000 +0200
++++ tsocks-1.8/Makefile.in	2008-02-13 18:08:59.000000000 +0200
+@@ -19,11 +19,13 @@
+ LIB_NAME = libtsocks
+ COMMON = common
+ PARSER = parser
++DEADPOOL = dead_pool
+ VALIDATECONF = validateconf
+ SCRIPT = tsocks
+ SHLIB_MAJOR = 1
+ SHLIB_MINOR = 8
+ SHLIB = ${LIB_NAME}.so.${SHLIB_MAJOR}.${SHLIB_MINOR}
++DEADPOOL_O = @DEADPOOL_O@
+ 
+ INSTALL = @INSTALL@
+ INSTALL_DATA = @INSTALL_DATA@
+@@ -50,8 +52,8 @@
+ ${SAVE}: ${SAVE}.c
+ 	${SHCC} ${LDFLAGS} ${INCLUDES} -static -o ${SAVE} ${SAVE}.c
+ 
+-${SHLIB}: ${OBJS} ${COMMON}.o ${PARSER}.o
+-	${SHCC} ${LDFLAGS} ${INCLUDES} -nostdlib -shared -o ${SHLIB} ${OBJS} ${COMMON}.o ${PARSER}.o ${DYNLIB_FLAGS} ${SPECIALLIBS} ${LIBS}
++${SHLIB}: ${OBJS} ${COMMON}.o ${PARSER}.o ${DEADPOOL_O}
++	${SHCC} ${LDFLAGS} ${INCLUDES} -nostdlib -shared -o ${SHLIB} ${OBJS} ${COMMON}.o ${PARSER}.o ${DEADPOOL_O} ${DYNLIB_FLAGS} ${SPECIALLIBS} ${LIBS}
+ 	ln -sf ${SHLIB} ${LIB_NAME}.so
+ 
+ %.so: %.c
+@@ -84,4 +86,7 @@
+ 	-rm -f *.so *.so.* *.o *~ ${TARGETS}
+ 
+ distclean: clean
+-	-rm -f config.cache config.log config.h Makefile
++	-rm -f config.cache config.log config.h Makefile \
++		aclocal.m4 config.status 
++	-rm -rf autom4te.cache
++
+diff -Nru tsocks-1.8.orig/parser.c tsocks-1.8/parser.c
+--- tsocks-1.8.orig/parser.c	2002-03-13 14:34:22.000000000 +0200
++++ tsocks-1.8/parser.c	2008-02-13 18:08:59.000000000 +0200
+@@ -29,6 +29,9 @@
+ static int handle_type(struct parsedfile *config, int, char *);
+ static int handle_port(struct parsedfile *config, int, char *);
+ static int handle_local(struct parsedfile *, int, char *);
++static int handle_tordns_enabled(struct parsedfile *, int, char *);
++static int handle_tordns_deadpool_range(struct parsedfile *, int, char *);
++static int handle_tordns_cache_size(struct parsedfile *, int, char *);
+ static int handle_defuser(struct parsedfile *, int, char *);
+ static int handle_defpass(struct parsedfile *, int, char *);
+ static int make_netent(char *value, struct netent **ent);
+@@ -43,9 +46,13 @@
+    /* Clear out the structure */
+    memset(config, 0x0, sizeof(*config));
+ 
+-	/* Initialization */
++   /* Initialization */
+    currentcontext = &(config->defaultserver);
+ 
++   /* Tordns defaults */
++   config->tordns_cache_size = 256;
++   config->tordns_enabled = 1;
++
+ 	/* If a filename wasn't provided, use the default */
+ 	if (filename == NULL) {
+ 		strncpy(line, CONF_FILE, sizeof(line) - 1);
+@@ -58,7 +65,7 @@
+ 	if ((conf = fopen(filename, "r")) == NULL) {
+ 		show_msg(MSGERR, "Could not open socks configuration file "
+ 			   "(%s), assuming all networks local\n", filename);
+-      handle_local(config, 0, "0.0.0.0/0.0.0.0");
++        handle_local(config, 0, "0.0.0.0/0.0.0.0");
+ 		rc = 1; /* Severe errors reading configuration */
+ 	}	
+ 	else {
+@@ -84,9 +91,13 @@
+ 			check_server(server);
+ 			server = server->next;
+ 		}
+-
+ 	}
+ 
++    /* Initialize tordns deadpool_range if not supplied */
++    if(config->tordns_deadpool_range == NULL) {
++        handle_tordns_deadpool_range(config, 0, "127.0.69.0/255.255.255.0");
++    }
++
+ 	return(rc);
+ }
+ 
+@@ -152,7 +163,13 @@
+ 				handle_defpass(config, lineno, words[2]);
+ 			} else if (!strcmp(words[0], "local")) {
+ 				handle_local(config, lineno, words[2]);
+-			} else {
++            } else if (!strcmp(words[0], "tordns_enable")) {
++                handle_tordns_enabled(config, lineno, words[2]);
++            } else if (!strcmp(words[0], "tordns_deadpool_range")) {
++                handle_tordns_deadpool_range(config, lineno, words[2]);
++            } else if (!strcmp(words[0], "tordns_cache_size")) {
++                handle_tordns_cache_size(config, lineno, words[2]);
++            } else {
+ 				show_msg(MSGERR, "Invalid pair type (%s) specified "
+ 					   "on line %d in configuration file, "
+ 					   "\"%s\"\n", words[0], lineno, 
+@@ -418,6 +435,126 @@
+ 	return(0);
+ }
+ 
++static int handle_flag(char *value) 
++{
++    if(!strcasecmp(value, "true") || !strcasecmp(value, "yes")  
++                                  || !strcmp(value, "1")) {
++        return 1;
++    } else if (!strcasecmp(value, "false") || !strcasecmp(value, "no") 
++                                           || !strcmp(value, "0")) {
++        return 0;
++    } else {
++        return -1;
++    }    
++}
++
++static int handle_tordns_enabled(struct parsedfile *config, int lineno,
++                           char *value)
++{
++    int val = handle_flag(value);
++    if(val == -1) {
++        show_msg(MSGERR, "Invalid value %s supplied for tordns_enabled at "
++                 "line %d in config file, IGNORED\n", value, lineno);
++    } else {
++        config->tordns_enabled = val;
++    }
++    return 0;
++}
++
++static int handle_tordns_cache_size(struct parsedfile *config, int lineno,
++                           char *value)
++{
++    char *endptr;
++    long size = strtol(value, &endptr, 10);
++    if(*endptr != '\0') {
++        show_msg(MSGERR, "Error parsing integer value for "
++                 "tordns_cache_size (%s), using default %d\n", 
++                 value, config->tordns_cache_size);
++    } else if(size < 128) {
++        show_msg(MSGERR, "The value supplied for tordns_cache_size (%d) "
++                 "is too small (<128), using default %d\n", size, 
++                 config->tordns_cache_size);
++    } else if(size > 4096) {
++        show_msg(MSGERR, "The value supplied for tordns_cache_range (%d) "
++                 "is too large (>4096), using default %d\n", size, 
++                 config->tordns_cache_size);
++    } else {
++        config->tordns_cache_size = size;
++    }
++    return 0;
++}
++
++static int handle_tordns_deadpool_range(struct parsedfile *config, int lineno, 
++                           char *value)
++{
++    int rc;
++    struct netent *ent;
++
++    if (config->tordns_deadpool_range != NULL) {
++        show_msg(MSGERR, "Only one 'deadpool' entry permitted, found a "
++               "second at line %d in configuration file.\n");
++        return(0);
++    }
++
++    if (currentcontext != &(config->defaultserver)) {
++        show_msg(MSGERR, "Deadpool cannot be specified in path "
++               "block at like %d in configuration file. "
++               "(Path block started at line %d)\n",
++               lineno, currentcontext->lineno);
++        return(0);
++    }
++
++    rc = make_netent(value, &ent);
++    /* This is copied from handle_local and should probably be folded into
++       a generic whinge() function or something */
++    switch(rc) {
++        case 1:
++            show_msg(MSGERR, "The deadpool specification (%s) is not validly "
++                   "constructed on line %d in configuration "
++                   "file\n", value, lineno);
++            return(0);
++            break;
++        case 2:
++            show_msg(MSGERR, "IP for deadpool "
++                   "network specification (%s) is not valid on line "
++                   "%d in configuration file\n", value, lineno);
++            return(0);
++            break;
++        case 3:
++            show_msg(MSGERR, "SUBNET for " 
++                   "deadpool network specification (%s) is not valid on "
++                   "line %d in configuration file\n", value, 
++                   lineno);
++            return(0);
++            break;
++        case 4:
++            show_msg(MSGERR, "IP (%s) & ", inet_ntoa(ent->localip));
++            show_msg(MSGERR, "SUBNET (%s) != IP on line %d in "
++                   "configuration file, ignored\n",
++                   inet_ntoa(ent->localnet), lineno);
++            return(0);
++        case 5:
++        case 6:
++        case 7:
++            show_msg(MSGERR, "Port specification is invalid and "
++                   "not allowed in deadpool specification "
++               "(%s) on line %d in configuration file\n",
++                   value, lineno);
++            return(0);
++         break;
++    }
++    if (ent->startport || ent->endport) {
++        show_msg(MSGERR, "Port specification is "
++           "not allowed in deadpool specification "
++           "(%s) on line %d in configuration file\n",
++           value, lineno);
++        return(0);
++    }
++
++    config->tordns_deadpool_range = ent;
++    return 0;
++}
++
+ static int handle_local(struct parsedfile *config, int lineno, char *value) {
+ 	int rc;
+ 	struct netent *ent;
+diff -Nru tsocks-1.8.orig/parser.h tsocks-1.8/parser.h
+--- tsocks-1.8.orig/parser.h	2002-02-10 09:26:27.000000000 +0200
++++ tsocks-1.8/parser.h	2008-02-13 18:08:59.000000000 +0200
+@@ -25,7 +25,7 @@
+    struct in_addr localnet; /* Mask for the network */
+    unsigned long startport; /* Range of ports for the */
+    unsigned long endport;   /* network                */
+-	struct netent *next; /* Pointer to next network entry */
++   struct netent *next; /* Pointer to next network entry */
+ };
+ 
+ /* Structure representing a complete parsed file */
+@@ -33,6 +33,10 @@
+    struct netent *localnets;
+    struct serverent defaultserver;
+    struct serverent *paths;
++   int tordns_enabled;
++   int tordns_failopen;
++   int tordns_cache_size;
++   struct netent *tordns_deadpool_range;
+ };
+ 
+ /* Functions provided by parser module */
+diff -Nru tsocks-1.8.orig/README.TORDNS tsocks-1.8/README.TORDNS
+--- tsocks-1.8.orig/README.TORDNS	1970-01-01 02:00:00.000000000 +0200
++++ tsocks-1.8/README.TORDNS	2008-02-13 18:08:59.000000000 +0200
+@@ -0,0 +1,187 @@
++
++TORDNS
++======
++
++What is it?
++-----------
++
++This patch modifies the tsocks library to use SOCKS for name resolution.
++
++
++Why should I use it?
++--------------------
++
++* It's easier.
++
++When using this patch you don't (always..) need to run 'tor-resolve' when 
++using 'torify' anymore.  Also, 'torify' now works directly with SSH without 
++the need for connect scripts or other fiddling. [As long as SSH is not 
++installed suid root].
++
++* It allows you to use programs which are not SOCKS aware to connect to 
++.onion sites. 
++
++For example, you can ssh directly to a .onion site, or use telnet / netcat
++without hassle.  
++
++
++QUICK: what do I need to do to make it work?
++--------------------------------------------
++
++Configuration instructions:
++
++1) Get the sources
++
++wget http://ftp1.sourceforge.net/tsocks/tsocks-1.8beta5.tar.gz
++wget http://www.totalinfosecurity.com/patches/tor-tsocks/tordns-1.8b5.patch
++
++2) Unpack and apply the tsocks patch
++
++tar xzvf tsocks-1.8beta5.tar.gz
++cd tsocks-1.8
++patch -p1 < ../tordns-1.8b5.patch
++
++3) Configure, compile and install
++
++NOTE: The default 'configure' settings for tsocks have been changed by 
++this patch.  The --disable-hostnames option (don't try to use DNS to look
++up SOCKS servers) is now enabled by default.  Also, tordns is enabled 
++by default.
++
++./configure 
++make 
++make install 
++
++All the tordns config options have sane default values which you should
++not need to change.  
++
++
++Why did I need to use 'tor-resolve' with 'torify' in the first place?
++---------------------------------------------------------------------
++
++Because if you run "torify telnet bar.foo.com 31337", for example, then 
++you're leaking information about what sites you're visiting to DNS servers.  
++
++The tor-resolve utility resolves names through tor using SOCKS, in a way
++that shouldn't compromise your privacy.
++
++
++What won't work with this?
++--------------------------
++
++The 'tordns' feature for tsocks only works with applications using the 
++standard c library name lookup mechanisms.
++
++Some programs roll their own name lookup functions, for example, 'curl' 
++uses the 'adns' library, not the standard c library name lookup calls.  
++In this case, you'll still be leaking DNS requests.
++
++However, it seems that most programs which go to the trouble of implementing 
++asynchronous DNS requests or doing other tricky things have native SOCKS or
++HTTP proxy support.  
++
++Requests for reverse name lookups are not intercepted.
++
++Finally, the tsocks library is NOT thread-safe, with or without this patch.
++You should not 'torify' multithreaded applications.
++
++
++How does it work?
++-----------------
++
++This patch adds interceptors for common name resolution calls to tsocks.  
++Specifically, the 'gethostbyname', 'getaddrinfo' and 'getipnodebyname' library 
++functions. (gethostbyname_r is not supported).
++
++When a call to one of these functions is intercepted, a SOCKS4A resolve 
++request is used to retrieve the relevant information, and the results are
++cached. 
++
++When the application calls 'connect', the cache is consulted and instead
++of making a SOCKS5 request and supplying the IP address, we connect using 
++the name.  This prevents those messages in the tor logs which look like:
++
++  Sep 23 10:12:20.901 [warn] fetch_from_buf_socks(): Your application (using s
++  ocks5 on port 80) is giving Tor only an IP address. Applications that do DNS
++  resolves themselves may leak information. Consider using Socks4A (e.g. via
++  privoxy or socat) instead.
++
++There are special provisions for handling .onion sites.  When a program asks
++to resolve a name ending in '.onion', no name lookup is performed.  A bogus IP 
++address is returned. The range of unused IP addresses to hand out is called the 
++"deadpool".  This IP address doesn't mean anything in particular, and could be 
++considered a cookie associated with the name.  When the application eventually 
++calls 'connect' with this bogus IP, the cache is consulted and the result is a 
++SOCKS5 request which includes the name of the .onion site.
++
++The default deadpool range is '127.0.69.0/255.255.255.0'.  NOTE: if a resolve
++request results in an IP from the deadpool range then the response is rejected,
++and it appears to the application that the lookup failed.
++
++The lookup cache is kept in mmap'd memory and shared across fork() calls.
++This is because some programs perform name lookups in a child process and 
++then invoke 'connect' in the parent as a kind of "poor man's async DNS".  
++
++
++Advanced configuration options
++------------------------------
++
++The following options have been added to the tsocks configuration file:
++
++tordns_enable
++
++  The default value is 'true'.  If you set it to 'false', tsocks should work 
++  just like it did without the tordns patch.  
++
++  
++tordns_deadpool_range
++
++  The default value is '127.0.69.0/255.255.255.0'.  This specifies what range
++  of IP addresses will be handed to the application as "cookies" for .onion
++  names.  Of course, you should pick a block of addresses which you aren't 
++  going to ever need to actually connect to.    
++
++
++tordns_cache_size
++
++  This specifies the number of IP addresses looked up through socks to cache.
++  The default value is 256. The default value is 256.  Each entry consumes 260 
++  bytes of memory, so the default adds 66,560 bytes of overhead to each 
++  'torified' process. NOTE: if the number of IP addresses in 
++  tordns_deadpool_range is less than the value specified for tordns_cache_size, 
++  then the cache will be shrunk to fit the deadpool range. This is to prevent 
++  duplicate deadpool addresses from ever appearing in the cache.
++
++
++TODO
++----
++
++* Think about how local names get resolved.  Is it important?  For example,
++  if I 'telnet localhost' which using tordns, what should happen?  Should
++  we search through /etc/hosts ourselves or what?  
++  
++* What about the isc library calls like res_init and so on?  How widely are
++  they use?  Does this present a more elegant way to implement this stuff?
++
++* Perhaps intercept res_query etc and try to do something appropriate.
++
++* It should be possible to make this thread-safe with --enable-threads.
++
++* validateconf needs to be updated to understand (and show information about)
++  the tordns configuration options.
++
++* Perhaps intercept reverse name lookups?
++
++* In fact, one could modify tsocks further to play nicely with tor.  For 
++  example, you could prevent nonlocal UDP traffic from being sent at all,
++  and so on.
++
++
++******************************************************
++Questions or comments, please contact:
++Blair Strang (bls@totalinfosecurity.com)
++Caleb Anderson (caleb.anderson@totalinfosecurity.com)
++Carl Purvis (carl.purvis@totalinfosecurity.com)
++
++Total Information Security Ltd.
++http://www.totalinfosecurity.com/
+diff -Nru tsocks-1.8.orig/tsocks.c tsocks-1.8/tsocks.c
+--- tsocks-1.8.orig/tsocks.c	2002-07-16 01:50:52.000000000 +0300
++++ tsocks-1.8/tsocks.c	2008-02-13 18:08:59.000000000 +0200
+@@ -53,15 +53,22 @@
+ #endif
+ #include <parser.h>
+ #include <tsocks.h>
++#include "dead_pool.h"
+ 
+ /* Global Declarations */
+ #ifdef USE_SOCKS_DNS
+ static int (*realresinit)(void);
+ #endif
+-static int (*realconnect)(CONNECT_SIGNATURE);
++#ifdef USE_TOR_DNS
++static dead_pool *pool = NULL;
++static struct hostent *(*realgethostbyname)(GETHOSTBYNAME_SIGNATURE);
++int (*realgetaddrinfo)(GETADDRINFO_SIGNATURE);
++static struct hostent *(*realgetipnodebyname)(GETIPNODEBYNAME_SIGNATURE);
++#endif
++int (*realconnect)(CONNECT_SIGNATURE);
+ static int (*realselect)(SELECT_SIGNATURE);
+ static int (*realpoll)(POLL_SIGNATURE);
+-static int (*realclose)(CLOSE_SIGNATURE);
++int (*realclose)(CLOSE_SIGNATURE);
+ static struct parsedfile *config;
+ static struct connreq *requests = NULL;
+ static int suid = 0;
+@@ -76,6 +83,11 @@
+ #ifdef USE_SOCKS_DNS
+ int res_init(void);
+ #endif
++#ifdef USE_TOR_DNS
++struct hostent *gethostbyname(GETHOSTBYNAME_SIGNATURE);
++int getaddrinfo(GETADDRINFO_SIGNATURE);
++struct hostent *getipnodebyname(GETIPNODEBYNAME_SIGNATURE);
++#endif 
+ 
+ /* Private Function Prototypes */
+ static int get_config();
+@@ -99,6 +111,10 @@
+ static int read_socksv4_req(struct connreq *conn);
+ static int read_socksv5_connect(struct connreq *conn);
+ static int read_socksv5_auth(struct connreq *conn);
++#ifdef USE_TOR_DNS
++static int deadpool_init();
++static int send_socksv4a_request(struct connreq *conn, const char *onion_host);
++#endif
+ 
+ void _init(void) {
+ #ifdef USE_OLD_DLSYM
+@@ -120,6 +136,11 @@
+ 	#ifdef USE_SOCKS_DNS
+ 	realresinit = dlsym(RTLD_NEXT, "res_init");
+ 	#endif
++    #ifdef USE_TOR_DNS
++    realgethostbyname = dlsym(RTLD_NEXT, "gethostbyname");
++    realgetaddrinfo = dlsym(RTLD_NEXT, "getaddrinfo");
++    realgetipnodebyname = dlsym(RTLD_NEXT, "getipnodebyname");
++    #endif
+ #else
+ 	lib = dlopen(LIBCONNECT, RTLD_LAZY);
+ 	realconnect = dlsym(lib, "connect");
+@@ -128,12 +149,21 @@
+ 	#ifdef USE_SOCKS_DNS
+ 	realresinit = dlsym(lib, "res_init");
+ 	#endif
+-	dlclose(lib);	
+-
++    #ifdef USE_TOR_DNS
++    realgethostbyname = dlsym(lib, "gethostbyname");
++    realgetaddrinfo = dlsym(lib, "getaddrinfo");
++    realgetipnodebyname = dlsym(RTLD_NEXT, "getipnodebyname");
++    #endif
++    dlclose(lib);	
+ 	lib = dlopen(LIBC, RTLD_LAZY);
+-   realclose = dlsym(lib, "close");
++	realclose = dlsym(lib, "close");
+ 	dlclose(lib);	
+ #endif
++#ifdef USE_TOR_DNS
++    /* Unfortunately, we can't do this lazily because otherwise our mmap'd
++       area won't be shared across fork()s. */
++    deadpool_init();
++#endif 
+ }
+ 
+ static int get_environment() {
+@@ -183,8 +213,7 @@
+ 
+    done = 1;
+ 
+-	return(0);
+-
++   return(0);
+ }
+ 
+ int connect(CONNECT_SIGNATURE) {
+@@ -273,12 +302,17 @@
+                          "real connect\n");
+ 		return(realconnect(__fd, __addr, __len));
+    }
+-      
++     
+    show_msg(MSGDEBUG, "Got connection request for socket %d to "
+                       "%s\n", __fd, inet_ntoa(connaddr->sin_addr));
+ 
+    /* If the address is local call realconnect */
++#ifdef USE_TOR_DNS
++   if (!(is_local(config, &(connaddr->sin_addr))) && 
++       !is_dead_address(pool, connaddr->sin_addr.s_addr)) {
++#else 
+    if (!(is_local(config, &(connaddr->sin_addr)))) {
++#endif
+       show_msg(MSGDEBUG, "Connection for socket %d is local\n", __fd);
+       return(realconnect(__fd, __addr, __len));
+    }
+@@ -871,15 +905,70 @@
+ 
+ static int send_socks_request(struct connreq *conn) {
+ 	int rc = 0;
+-	
+-	if (conn->path->type == 4) 
+-		rc = send_socksv4_request(conn);
+-	else
+-		rc = send_socksv5_method(conn);
+ 
++#ifdef USE_TOR_DNS
++    if (conn->path->type == 4) {
++        char *name = get_pool_entry(pool, &(conn->connaddr.sin_addr));
++        if(name != NULL) {
++            rc = send_socksv4a_request(conn,name);
++        } else {
++            rc = send_socksv4_request(conn);
++        }
++#else 
++    if (conn->path->type == 4) {
++      rc = send_socksv4_request(conn);
++#endif
++    } else {
++	  rc = send_socksv5_method(conn);
++	}
+    return(rc);
+ }			
+ 
++#ifdef USE_TOR_DNS
++static int send_socksv4a_request(struct connreq *conn,const char *onion_host) 
++{
++  struct passwd *user;
++  struct sockreq *thisreq;
++  int endOfUser;
++  /* Determine the current username */
++  user = getpwuid(getuid());	
++
++  thisreq = (struct sockreq *) conn->buffer;
++  endOfUser=sizeof(struct sockreq) +
++  (user == NULL ? 0 : strlen(user->pw_name)) + 1;
++
++  /* Check the buffer has enough space for the request  */
++  /* and the user name                                  */
++  conn->datalen = endOfUser+ 
++                  (onion_host == NULL ? 0 : strlen(onion_host)) + 1;
++  if (sizeof(conn->buffer) < conn->datalen) {
++      show_msg(MSGERR, "The SOCKS username is too long");
++      conn->state = FAILED;
++      return(ECONNREFUSED);
++  }
++
++  /* Create the request */
++  thisreq->version = 4;
++  thisreq->command = 1;
++  thisreq->dstport = conn->connaddr.sin_port;
++  thisreq->dstip   = htonl(1);
++
++  /* Copy the username */
++  strcpy((char *) thisreq + sizeof(struct sockreq), 
++         (user == NULL ? "" : user->pw_name));
++
++  /* Copy the onion host */
++  strcpy((char *) thisreq + endOfUser,
++         (onion_host == NULL ? "" : onion_host));
++
++  conn->datadone = 0;
++  conn->state = SENDING;
++  conn->nextstate = SENTV4REQ;
++
++  return(0);   
++}
++#endif /* USE_TOR_DNS */
++
+ static int send_socksv4_request(struct connreq *conn) {
+ 	struct passwd *user;
+ 	struct sockreq *thisreq;
+@@ -933,6 +1022,10 @@
+ }			
+ 
+ static int send_socksv5_connect(struct connreq *conn) {
++#ifdef USE_TOR_DNS
++   int namelen = 0;
++   char *name = NULL;
++#endif
+    char constring[] = { 0x05,    /* Version 5 SOCKS */
+                         0x01,    /* Connect request */
+                         0x00,    /* Reserved        */
+@@ -944,10 +1037,38 @@
+    conn->nextstate = SENTV5CONNECT;
+    memcpy(conn->buffer, constring, sizeof(constring)); 
+    conn->datalen = sizeof(constring);
+-	memcpy(&conn->buffer[conn->datalen], &(conn->connaddr.sin_addr.s_addr), 
+-          sizeof(conn->connaddr.sin_addr.s_addr));
+-   conn->datalen += sizeof(conn->connaddr.sin_addr.s_addr);
+-	memcpy(&conn->buffer[conn->datalen], &(conn->connaddr.sin_port), sizeof(conn->connaddr.sin_port));
++
++#ifdef USE_TOR_DNS
++   show_msg(MSGDEBUG, "send_socksv5_connect: looking for: %s\n",
++            inet_ntoa(conn->connaddr.sin_addr));
++
++   name = get_pool_entry(pool, &(conn->connaddr.sin_addr));
++   if(name != NULL) {
++       namelen = strlen(name);
++       if(namelen > 255) {  /* "Can't happen" */
++           name = NULL;
++       }
++   }
++   if(name != NULL) {
++       show_msg(MSGDEBUG, "send_socksv5_connect: found it!\n");
++       /* Substitute the domain name from the pool into the SOCKS request. */
++       conn->buffer[3] = 0x03;  /* Change the ATYP field */
++       conn->buffer[4] = namelen;  /* Length of name */
++       conn->datalen++;
++       memcpy(&conn->buffer[conn->datalen], name, namelen);
++       conn->datalen += namelen;
++   } else {
++       show_msg(MSGDEBUG, "send_socksv5_connect: ip address not found\n");
++#endif
++       /* Use the raw IP address */
++       memcpy(&conn->buffer[conn->datalen], &(conn->connaddr.sin_addr.s_addr), 
++              sizeof(conn->connaddr.sin_addr.s_addr));
++       conn->datalen += sizeof(conn->connaddr.sin_addr.s_addr);
++#ifdef USE_TOR_DNS
++   }
++#endif
++   memcpy(&conn->buffer[conn->datalen], &(conn->connaddr.sin_port), 
++        sizeof(conn->connaddr.sin_port));
+    conn->datalen += sizeof(conn->connaddr.sin_port);
+ 
+    return(0);
+@@ -1177,22 +1298,54 @@
+ }
+ #endif
+ 
+-#if 0
+-	/* Get the flags of the socket, (incase its non blocking */
+-	if ((sockflags = fcntl(sockid, F_GETFL)) == -1) {
+-		sockflags = 0;
+-	}
++#ifdef USE_TOR_DNS
++static int deadpool_init()
++{
++  if(!pool) {
++      get_environment();
++      get_config();
++      if(config->tordns_enabled) {
++          pool = init_pool(
++              config->tordns_cache_size, 
++              config->tordns_deadpool_range->localip, 
++              config->tordns_deadpool_range->localnet, 
++              config->defaultserver.address,
++              config->defaultserver.port
++          );
++          if(!pool) {
++              show_msg(MSGERR, "failed to initialize deadpool: tordns disabled\n");
++          }
++      }
++  }
++  return 0;
++}
++
++struct hostent *gethostbyname(GETHOSTBYNAME_SIGNATURE)
++{
++  if(pool) {
++      return our_gethostbyname(pool, name);
++  } else {
++      return realgethostbyname(name);
++  }  
++}
++
++int getaddrinfo(GETADDRINFO_SIGNATURE)
++{
++  if(pool) {
++      return our_getaddrinfo(pool, node, service, hints, res);
++  } else {
++      return realgetaddrinfo(node, service, hints, res);
++  }
++}
++
++struct hostent *getipnodebyname(GETIPNODEBYNAME_SIGNATURE)
++{
++  if(pool) {
++      return our_getipnodebyname(pool, name, af, flags, error_num);
++  } else {
++      return realgetipnodebyname(name, af, flags, error_num);
++  }
++}
+ 
+-	/* If the flags show the socket as blocking, set it to   */
+-	/* blocking for our connection to the socks server       */
+-	if ((sockflags & O_NONBLOCK) != 0) {
+-		fcntl(sockid, F_SETFL, sockflags & (~(O_NONBLOCK)));
+-	}
+ #endif 
+-#if 0
+-	/* If the socket was in non blocking mode, restore that */
+-	if ((sockflags & O_NONBLOCK) != 0) {
+-		fcntl(sockid, F_SETFL, sockflags);
+-	}
+-#endif
+ 
+diff -Nru tsocks-1.8.orig/tsocks.conf.5 tsocks-1.8/tsocks.conf.5
+--- tsocks-1.8.orig/tsocks.conf.5	2008-02-13 18:06:49.000000000 +0200
++++ tsocks-1.8/tsocks.conf.5	2008-02-13 18:08:59.000000000 +0200
+@@ -126,6 +126,29 @@
+ range 150.0.0.0 to 150.255.255.255 when the connection request is for ports
+ 80-1024.
+ 
++.TP
++.I tordns_enable
++This enables the use of the 'tordns' feature in tsocks, which overrides the
++standard C library name resolution calls to use SOCKS.    The default value is 
++'true'. 
++
++.TP
++.I tordns_deadpool_range
++Tor hidden sites do not have real IP addresses.  This specifies what range of 
++IP addresses will be handed to the application as "cookies" for .onion names.  
++Of course, you should pick a block of addresses which you aren't going to ever 
++need to actually connect to. The default value is '127.0.69.0/255.255.255.0'.
++
++.TP
++.I tordns_cache_size
++This specifies the number of IP addresses looked up through SOCKS to cache.
++The default value is 256.  Each entry consumes 260 bytes of memory, so the
++default adds 66,560 bytes of overhead to each 'torified' process. NOTE: if
++the number of IP addresses in tordns_deadpool_range is less than the value
++specified for tordns_cache_size, then the cache will be shrunk to fit the
++deadpool range. This is to prevent duplicate deadpool addresses from ever
++appearing in the cache. 
++
+ .SH UTILITIES
+ tsocks comes with two utilities that can be useful in creating and verifying
+ the tsocks configuration file. 
+diff -Nru tsocks-1.8.orig/tsocks.h tsocks-1.8/tsocks.h
+--- tsocks-1.8.orig/tsocks.h	2002-03-13 14:58:09.000000000 +0200
++++ tsocks-1.8/tsocks.h	2008-02-13 18:08:59.000000000 +0200
+@@ -52,7 +52,7 @@
+    /* Buffer for sending and receiving on the socket */
+    int datalen;
+    int datadone;
+-   char buffer[1024];
++   char buffer[2048];
+ 
+    struct connreq *next;
+ };
+diff -Nru tsocks-1.8.orig/validateconf.c tsocks-1.8/validateconf.c
+--- tsocks-1.8.orig/validateconf.c	2008-02-13 18:06:49.000000000 +0200
++++ tsocks-1.8/validateconf.c	2008-02-13 18:08:59.000000000 +0200
+@@ -163,7 +163,20 @@
+ 		}	
+ 	} 
+ 
+-	return;
++#ifdef USE_TOR_DNS
++    /* Show tordns configuration options */
++    printf("=== TorDNS Configuration Options ===\n");
++    printf("Tor DNS enabled:        %s\n", 
++           config->tordns_enabled ? "yes" : "no");
++    printf("Tor DNS deadpool range: %s/", 
++           inet_ntoa(config->tordns_deadpool_range->localip));
++    printf("%s\n", 
++        inet_ntoa(config->tordns_deadpool_range->localnet));
++    printf("Tor DNS cache size:     %d\n", config->tordns_cache_size);
++    printf("\n");
++#endif
++
++    return;
+ }
+ 
+ void show_server(struct parsedfile *config, struct serverent *server, int def) {

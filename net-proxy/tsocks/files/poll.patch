@@ -1,0 +1,12 @@
+--- tsocks-1.8.orig/tsocks.c	2010-04-02 18:18:48.000000000 +0000
++++ tsocks-1.8/tsocks.c	2010-02-11 09:01:58.000000000 +0000
+@@ -663,6 +663,9 @@
+                setevents |= POLLOUT; 
+                nevents++;
+             }
++            /* Also, if the connection is DONE, we have to restore the events
++             * in ufds[]. In the next loop we won't touch that socket again. */
++            ufds[i].events = conn->selectevents;
+          }
+       }
+    } while (nevents == 0);
