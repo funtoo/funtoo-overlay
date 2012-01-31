@@ -227,11 +227,12 @@ class UnifiedTree(Tree):
 
 class InsertEbuilds(MergeStep):
 
-	def __init__(self,srctree,select="all",skip=None,replace=False,categories=None):
+	def __init__(self,srctree,select="all",skip=None,replace=False,merge=None,categories=None):
 		self.select = select
 		self.skip = skip
 		self.srctree = srctree
 		self.replace = replace
+		self.merge = merge
 		self.categories = categories
 
 	def run(self,desttree):
@@ -287,7 +288,32 @@ class InsertEbuilds(MergeStep):
 				if self.replace == True or (type(self.replace) == types.ListType and "%s/%s" % (cat,pkg) in self.replace):
 					if not os.path.exists(tcatdir):
 						os.makedirs(tcatdir)
-					runShell("rm -rf %s; cp -a %s %s" % (tpkgdir, pkgdir, tpkgdir ))
+					if isinstance(self.merge, list) and "%s/%s" % (cat,pkg) in self.merge:
+						pkgdir_manifest_file = open("%s/Manifest" % pkgdir)
+						tpkgdir_manifest_file = open("%s/Manifest" % tpkgdir)
+						pkgdir_manifest = pkgdir_manifest_file.readlines()
+						tpkgdir_manifest = tpkgdir_manifest_file.readlines()
+						pkgdir_manifest_file.close()
+						tpkgdir_manifest_file.close()
+						entries = {
+							"AUX": {},
+							"DIST": {},
+							"EBUILD": {},
+							"MISC": {}
+						}
+						for line in tpkgdir_manifest + pkgdir_manifest:
+							if line.startswith(("AUX ", "DIST ", "EBUILD ", "MISC ")):
+								entry_type = line.split(" ")[0]
+								if entry_type in (("AUX", "DIST", "EBUILD", "MISC")):
+									entries[entry_type][line.split(" ")[1]] = line
+						runShell("cp -a %s %s" % (pkgdir, os.path.dirname(tpkgdir)))
+						merged_manifest_file = open("%s/Manifest" % tpkgdir, "w")
+						for entry_type in ("AUX", "DIST", "EBUILD", "MISC"):
+							for key in sorted(entries[entry_type]):
+								merged_manifest_file.write(entries[entry_type][key])
+						merged_manifest_file.close()
+					else:
+						runShell("rm -rf %s; cp -a %s %s" % (tpkgdir, pkgdir, tpkgdir ))
 					copied = True
 				else:
 					if not os.path.exists(tpkgdir):
