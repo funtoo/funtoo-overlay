@@ -1,0 +1,25 @@
+# /etc/conf.d/udev: config file for udev
+
+# Coldplug should be enabled for proper hardware detection and
+# module-autoloading. Normally, you will want this enabled. If
+# you need to disable it temporarily, you can either do so
+# below or use the "nocoldplug" kernel boot option.
+
+coldplug="yes"
+
+# Persistent_net will ensure that your network interface names
+# don't change. However, it can be disabled if you are planning
+# to change your hardware. This will prevent your new hardware
+# from showing up as eth1, eth2, etc. Some people prefer it
+# disabled. Recommended enabled unless you prefer otherwise.
+
+persistent_net="yes"
+
+# If you set the device_tarball option to yes, then 
+# prior to system shutdown, the state of /dev will be backed up
+# to an archive and restored when your system boots. This is
+# useful if you need to manually create device nodes and don't
+# want to keep repeating yourself. Disabled by default.
+
+device_tarball="no"
+

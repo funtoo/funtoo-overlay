@@ -1,5 +1,10 @@
 # PLEASE KEEP MOST RECENT MASKS ON TOP, REVERSE CHRONO ORDER
 
+# Jean-Francis Roy (3 Feb 2012)
+# udev bump, introspection being now optional
+=sys-fs/udev-171-r2
+=sys-fs/udev-164-r3
+
 # Oleg Vinichenko (23 Jan 2012)
 # postfix-2.10 update, masked for testing
 >=mail-mta/postfix-2.10

@@ -1,0 +1,12 @@
+03 Feb 2012; Jean-Francis Roy <jeanfrancis@funtoo.org>
+
+Bumping to udev-160-r3 and udev-171-r2 to revert to some upstream changes. We
+now have gobject-introspection as an optional dependency to remove desktop
+dependencies from Metro builds.
+
+The "extras" USE flag will soon be removed by upstream. Now, introspection and
+gudev can both be enabled by their respective USE flags, or by  the extras USE 
+flag (see bug 348472) as several packages still depend on udev[extras].
+
+When this is removed, packages will depend on udev[introspection], udev[gudev],
+etc. We will have to stay in sync with upstream USE flags or this reason.

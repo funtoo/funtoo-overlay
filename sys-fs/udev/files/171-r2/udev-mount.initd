@@ -1,0 +1,91 @@
+#!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+description="Mount /dev and let udev create the device-nodes"
+
+depend()
+{
+	keyword -openvz -vserver -lxc
+	provide dev
+	need sysfs
+	before checkfs fsck
+}
+
+start() {
+	if [ "$(cat /proc/mounts | cut -f2 -d" " | grep "^/dev$")" != "" ]
+	then
+		einfo "udev: /dev already mounted, skipping..."
+		return
+	fi
+	if [ -e /etc/conf.d/udev ]
+	then
+		. /etc/conf.d/udev
+	fi
+
+	ebegin "udev: Mounting /dev"
+	if fstabinfo --quiet /dev; then
+	# if defined in /etc/fstab, use those options:
+		mount -n /dev
+	else
+		# otherwise, automatically mount using these options:
+		# Some devices require exec, Bug #92921
+		mount -n -t tmpfs -o "exec,nosuid,mode=0755,size=10M" udev /dev
+	fi
+	eend $?
+
+	touch /dev/.rcsysinit
+
+	# SELINUX STUFF
+
+	if [ -x /sbin/restorecon -a -c /selinux/null ]; then
+		restorecon /dev > /selinux/null
+	fi
+
+	# DEVICE TARBALL STUFF
+
+	local tarball_file=/lib/udev/state/devices.tar.bz2
+	if yesno "${device_tarball}" && [ -s "${tarball_file}" ]
+	then
+		ebegin "udev: Populating /dev with saved device nodes"
+		tar xpf "${tarball_file}" -C /dev
+		eend $?
+	fi
+
+	# copy over any persistant things
+	if [ -d /lib/udev/devices ]; then
+		cp -RPp /lib/udev/devices/* /dev 2>/dev/null
+	fi
+
+	# Create problematic directories
+	mkdir -p /dev/pts /dev/shm
+
+	if [ -e /proc/sys/kernel/hotplug ]; then
+		echo "" >/proc/sys/kernel/hotplug
+	fi
+
+	if [ -e /lib/udev/write_root_link_rule ]
+	then
+		/lib/udev/write_root_link_rule
+	else
+		/lib/udev/write_root_link_rule
+	fi
+
+	# this function disables rules files
+	# by creating new files with the same name
+	# in a temp rules directory with higher priority
+	local d=/dev/.udev/rules.d
+	if yesno "${persistent_net:-yes}"; then
+		ewarn "udev: Persistent network rules enabled in /etc/conf.d/udev"
+	else
+		mkdir -p "$d"
+		echo "# This file disables persistent-net due to /etc/conf.d/udev" > "$d"/75-persistent-net-generator.rules
+	fi
+
+	# load unix domain sockets if built as module, Bug #221253
+	if [ -e /proc/modules ] ; then
+		modprobe -q unix 2>/dev/null
+	fi
+
+	return 0
+}

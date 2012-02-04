@@ -1,0 +1,86 @@
+#!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+description="Save device nodes to a persistent tarball"
+
+depend()
+{
+	keyword -openvz -vserver -lxc
+	before mount-ro killprocs
+}
+
+start() {
+	/lib/udev/move_tmp_persistent_rules.sh
+	tarball_file=/lib/udev/state/devices.tar.bz2
+	if [ -e /etc/conf.d/udev ]
+	then
+		. /etc/conf.d/udev
+	fi
+	device_tarball=${device_tarball:-${RC_DEVICE_TARBALL:-NO}}
+	if ! yesno "${device_tarball}"
+	then
+		ebegin "udev: Device tarball disabled, skipping"
+		eend 0
+		return 0
+	fi
+	ebegin "Saving device nodes"
+	if ! touch "${tarball_file}"
+	then
+		eend 1 "udev: Couldn't write to device tarball."
+		return 1
+	fi
+	if [ -e /dev/.devfsd ] || [ ! -e /dev/.udev ] 
+	then
+		eend 1 "udev: Device tarball enabled but udev filesystem not found"
+	fi
+
+	# Handle our temp files
+	save_tmp_base=/tmp/udev.savedevices."$$"
+	devices_udev="${save_tmp_base}"/devices.udev
+	devices_real="${save_tmp_base}"/devices.real
+	devices_totar="${save_tmp_base}"/devices.totar
+	device_tmp_tarball="${save_tmp_base}"/devices
+	
+	rm -rf "${save_tmp_base}"
+	mkdir "${save_tmp_base}"
+	touch "${devices_udev}" "${devices_real}" "${devices_totar}" "${device_tmp_tarball}"
+
+	if ! [ -f "${devices_udev}" -a -f "${devices_real}" -a -f "${devices_totar}" -a -f "${device_tmp_tarball}" ]
+	then
+		eend 1 "udev: Couldn't create temporary files for device tarball"
+		return 1
+	fi
+
+	cd /dev
+	# Find all devices, but ignore .udev directory
+	find . -xdev -type b -or -type c -or -type l | cut -d/ -f2- | grep -v ^\\.udev >"${devices_real}"
+	
+	# Figure out what udev created
+	udevadm info --export-db | sed -ne 's,^[SN]: \(.*\),\1,p' >"${devices_udev}"
+
+	# These ones we also do not want in there
+	for x in MAKEDEV core fd initctl pts shm stderr stdin stdout root; do
+		echo "${x}" >> "${devices_udev}"
+	done
+	if [ -d /lib/udev/devices ]; then
+		cd /lib/udev/devices
+		find . -xdev -type b -or -type c -or -type l | cut -d/ -f2- >> "${devices_udev}"
+		cd /dev
+	fi
+
+	fgrep -x -v -f "${devices_udev}" "${devices_real}" > "${devices_totar}"
+
+	# Now only tarball those not created by udev if we have any
+	if [ -s "${devices_totar}" ]; then
+		# we dont want to descend into mounted filesystems (e.g. devpts)
+		# looking up username may involve NIS/network
+		# and net may be down
+		tar --one-file-system --numeric-owner -jcpf "${device_tmp_tarball}" -T "${devices_totar}"
+		mv -f "${device_tmp_tarball}" "${tarball_file}"
+	else
+		rm -f "${tarball_file}"
+	fi
+	eend 0
+	einfo "udev: Device tarball created."
+}
