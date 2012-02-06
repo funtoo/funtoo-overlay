@@ -1,0 +1,72 @@
+#!/sbin/runscript
+# Copyright 1999-2008 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+
+depend() {
+	keyword -openvz -vserver
+	need udev-mount
+	before checkfs fsck
+}
+
+start() {
+	ebegin "Starting udevd daemon"
+	start-stop-daemon --start --exec /sbin/udevd -- --daemon
+	if [ $? -ne 0 ]
+	then
+		eend 1
+		return 1
+	fi
+
+	# By default, we want coldplug enabled. "coldplug" means that 
+	# udev will scan the system for already-connected hardware and
+	# generate synthetic/pretend connection events, which will help
+	# to load the correct modules, when, for example, you try to
+	# bring up your eth0 interface and it depends on a module that
+	# is not currently loaded.
+
+	local coldplug="yes"
+
+	if [ -e /etc/conf.d/udev ]
+	then
+		. /etc/conf.d/udev
+	fi
+
+	# coldplug can be disabled by the "nocoldplug" kernel boot
+	# parameter.
+
+	if get_bootparam "nocoldplug" ; then
+		coldplug="NO"
+		ewarn "Skipping udev coldplug as requested in kernel cmdline"
+	fi
+
+	ebegin "Populating /dev with existing devices through uevents"
+	if yesno "${coldplug}"; then
+		# perform full coldplug:
+		udevadm trigger
+	else
+		# do not perform a full coldplug:
+		# Do not run any init-scripts, Bug #206518
+		udevadm control --env do_not_run_plug_service=1
+		# only create device nodes
+		udevadm trigger --attr-match=dev
+		# run persistent-net stuff, bug 191466
+		udevadm trigger --subsystem-match=net
+	fi
+	udevadm settle --timeout=60
+	eend $?
+
+	udevadm control --env do_not_run_plug_service=
+	# should exist on every system, else udev failed
+	if [ ! -e /dev/zero ]; then
+		eerror "Assuming udev failed somewhere, as /dev/zero does not exist."
+		return 1
+	fi
+	return 0
+
+}
+
+stop() {
+	ebegin "Stopping udevd daemon"
+		start-stop-daemon --stop /sbin/udevd
+	eend $?
+}

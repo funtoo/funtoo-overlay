@@ -1,0 +1,27 @@
+#!/sbin/runscript
+# Copyright 1999-2007 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/sys-fs/udev/files/udev-postmount-130-r2.initd,v 1.1 2008/10/28 21:59:05 zzam Exp $
+
+depend() {
+	keyword -openvz -vserver -lxc
+	need udev-mount localmount
+}
+
+start() {
+	# check if this system uses udev
+	[ -d /dev/.udev/ ] || return 0
+
+	ebegin "udev: storing persistent rules"
+
+	# store persistent-rules that got created while booting
+	# when / was still read-only
+	/lib/udev/move_tmp_persistent_rules.sh
+	eend $?
+}
+
+stop() {
+	:
+}
+
+# vim:ts=4
