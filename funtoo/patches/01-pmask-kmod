@@ -1,8 +1,8 @@
 diff --git a/profiles/package.mask/gentoo b/profiles/package.mask/gentoo
-index b07dff7..f22e439 100644
+index cf614f9..1477ad0 100644
 --- a/profiles/package.mask/gentoo
 +++ b/profiles/package.mask/gentoo
-@@ -381,16 +381,6 @@ net-mail/vmailmgr-tools
+@@ -384,17 +384,6 @@ net-mail/vmailmgr-tools
  # Masking alpha release series.
  >=net-irc/atheme-services-7.0.0_alpha1
  
@@ -13,6 +13,7 @@ index b07dff7..f22e439 100644
 -# http://www.freedesktop.org/wiki/Software/systemd/separate-usr-is-broken
 -~sys-fs/udev-175
 -~sys-fs/udev-180
+-~sys-fs/udev-181
 -<sys-apps/kmod-9999
 ->=sys-apps/systemd-30
 -
