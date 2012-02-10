@@ -11,7 +11,7 @@ SRC_URI="ftp://sources.redhat.com/pub/lvm2/${PN/lvm/LVM}.${PV}.tgz
 
 LICENSE="GPL-2"
 SLOT="0"
-KEYWORDS="~*"
+KEYWORDS="*"
 
 IUSE="readline +static +static-libs clvm cman +lvm1 selinux"
 
@@ -33,7 +33,7 @@ RDEPEND="${RDEPEND}
 
 DEPEND="${DEPEND_COMMON}
 		dev-util/pkgconfig
-		>=sys-devel/binutils-2.20.1-r1"
+		>=sys-devel/binutils-2.20.1"
 
 S="${WORKDIR}/${PN/lvm/LVM}.${PV}"
 
