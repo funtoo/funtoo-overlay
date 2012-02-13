@@ -84,11 +84,11 @@ def get_cpv_in_portdir(portdir,cat,pkg):
 	return ebuilds
 	
 def version_compare(portdir,gportdir,keywords):
-	print()
+	print("")
 	print("Package comparison for %s" % keywords)
 	print("============================================")
 	print("(note that package.{un}mask(s) are ignored - looking at ebuilds only)")
-	print()
+	print("")
 
 	for cat in os.listdir(portdir):
 		if cat == ".git":
