@@ -1,8 +1,8 @@
 diff --git a/profiles/package.mask/gentoo b/profiles/package.mask/gentoo
-index cf614f9..1477ad0 100644
+index 845f9b9..1995d38 100644
 --- a/profiles/package.mask/gentoo
 +++ b/profiles/package.mask/gentoo
-@@ -384,17 +384,6 @@ net-mail/vmailmgr-tools
+@@ -458,18 +458,6 @@ net-mail/vmailmgr-tools
  # Masking alpha release series.
  >=net-irc/atheme-services-7.0.0_alpha1
  
