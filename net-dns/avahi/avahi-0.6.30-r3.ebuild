@@ -194,7 +194,9 @@ src_install() {
 		doins avahi.devhelp || die
 	fi
 
-	use python && python_convert_shebangs -r 2 "${ED}"/usr/bin #396339
+	# /usr/bin/avahi-bookmarks is installed only with USE="bookmarks dbus gtk python".
+	# /usr/bin/avahi-discover is installed only with USE="dbus gtk python".
+	use dbus && use gtk && use python && python_convert_shebangs -r 2 "${ED}usr/bin"
 
 	find "${ED}" -name '*.la' -exec rm -f {} +
 }

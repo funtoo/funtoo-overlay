@@ -15,6 +15,7 @@ index cf614f9..1477ad0 100644
 -~sys-fs/udev-180
 -~sys-fs/udev-181
 -<sys-apps/kmod-9999
+-~sys-fs/udev-init-scripts-8
 ->=sys-apps/systemd-30
 -
  # Michael Weber <xmw@gentoo.org> (04 Nov 2011)
