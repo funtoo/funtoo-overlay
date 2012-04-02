@@ -12,7 +12,7 @@ RPN=grub
 RP=${RPN}-${PV}
 S=${WORKDIR}/${RP}
 
-PATCHVER="1.9" # Should match the revision ideally
+PATCHVER="1.12" # Should match the revision ideally
 DESCRIPTION="GNU GRUB Legacy boot loader"
 HOMEPAGE="http://www.gnu.org/software/grub/"
 SRC_URI="mirror://gentoo/${RP}.tar.gz
@@ -67,7 +67,6 @@ src_unpack() {
 
 	cat ${FILESDIR}/${PVR}/grub-legacy-0.97-r12-device-map.patch | patch -p1 || die "patch failure"
 	cat ${FILESDIR}/${PVR}/grub-legacy-0.97-r12-setup.patch | patch -p1 || die "patch failure"
-	cat ${FILESDIR}/${PVR}/grub-legacy-0.97-r12-gcc-4.6.patch | patch -p1 || die "patch failure"
 
 	eautoreconf
 
