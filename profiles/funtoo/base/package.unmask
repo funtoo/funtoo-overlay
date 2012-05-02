@@ -1,0 +1,3 @@
+# Until the Funtoo profiles are releases assume that anyone using them
+# also always want's the latest portage.
+sys-apps/portage
