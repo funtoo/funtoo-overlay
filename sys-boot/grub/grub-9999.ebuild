@@ -4,20 +4,10 @@
 
 EAPI=4
 
-if [[ ${PV} == "9999" ]] ; then
-	EBZR_REPO_URI="http://bzr.savannah.gnu.org/r/grub/trunk/grub/"
-	LIVE_ECLASS="bzr"
-	SRC_URI=""
-	DO_AUTORECONF="true"
-else
-	MY_P=${P/_/\~}
-	SRC_URI="mirror://gnu/${PN}/${MY_P}.tar.xz
-		mirror://gentoo/${MY_P}.tar.xz"
-	# Masked until documentation guys consolidate the guide and approve
-	# it for usage.
-	#KEYWORDS="~amd64 ~mips ~x86"
-	S=${WORKDIR}/${MY_P}
-fi
+EBZR_REPO_URI="http://bzr.savannah.gnu.org/r/grub/trunk/grub/"
+LIVE_ECLASS="bzr"
+SRC_URI=""
+DO_AUTORECONF="true"
 
 inherit mount-boot eutils flag-o-matic pax-utils toolchain-funcs ${DO_AUTORECONF:+autotools} ${LIVE_ECLASS}
 unset LIVE_ECLASS
@@ -26,7 +16,6 @@ DESCRIPTION="GNU GRUB boot loader"
 HOMEPAGE="http://www.gnu.org/software/grub/"
 
 LICENSE="GPL-3"
-#SLOT="2"
 SLOT="0"
 IUSE="custom-cflags debug device-mapper efiemu nls static sdl truetype"
 
@@ -172,6 +161,7 @@ src_prepare() {
 		-e '/setfilename/s:grub.info:grub2.info:' \
 		-e 's:(grub):(grub2):' \
 		"${S}"/docs/grub.texi
+	sed -i -e '1iAM_GNU_GETTEXT_VERSION([0.18])' configure.ac
 
 	# autogen.sh does more than just run autotools
 	if [[ -n ${DO_AUTORECONF} ]] ; then
@@ -318,15 +308,10 @@ setup_boot_dir() {
 
 pkg_config() {
 	local dir
-
 	mount-boot_mount_boot_partition
-
 	einfo "Enter the directory where you want to setup grub2 ('${ROOT}boot/grub2/'):"
 	read dir
-
 	[[ -z ${dir} ]] && dir="${ROOT}"boot/grub2
-
 	setup_boot_dir "${dir}"
-
 	mount-boot_pkg_postinst
 }
