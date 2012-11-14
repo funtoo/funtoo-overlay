@@ -1,0 +1,20 @@
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/hardened/linux/use.mask,v 1.17 2012/10/23 22:47:18 zorry Exp $
+
+-hardened
+
+emul-linux-x86
+
+# tcc is x86-only
+tcc
+
+# precompiled headers are not compat with ASLR.
+pch
+
+# prelink is masked for hardened
+prelink
+
+# orc is jit (dev-lang/orc)
+orc
+

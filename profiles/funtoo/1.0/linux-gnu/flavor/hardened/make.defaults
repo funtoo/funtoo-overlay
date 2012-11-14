@@ -1,0 +1,9 @@
+# Copyright 1999-2012 Gentoo Foundation.
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/hardened/linux/make.defaults,v 1.17 2012/06/26 13:36:21 blueness Exp $
+
+# Jorge Manuel B. S. Vicetto <jmbsvicetto@gentoo.org> (16 Nov 2011)
+# Rename STAGE1_USE to BOOTSTRAP_USE and stack it to the parent value
+BOOTSTRAP_USE="${BOOTSTRAP_USE} hardened pax_kernel pic -jit -orc"
+
+USE="-fortran hardened -jit pax_kernel pic urandom -orc"

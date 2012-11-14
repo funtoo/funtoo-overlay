@@ -1,0 +1,12 @@
+# Copyright 1999-2011 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/hardened/linux/package.use.mask,v 1.13 2012/07/19 13:38:40 anarchy Exp $
+
+sys-devel/gcc -hardened
+sys-libs/glibc -hardened
+
+# bug 407689
+media-tv/xbmc profile
+
+# Have no way to disable jit in esr release.
+=www-client/firefox-10* pgo

@@ -1,0 +1,7 @@
+# Copyright 1999-2011 Gentoo Foundation.
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/cvsroot/gentoo-x86/profiles/hardened/linux/packages,v 1.2 2011/07/03 22:28:58 blueness Exp $
+
+# This file extends the base packages file for all hardened profiles
+
+*sys-apps/paxctl
