@@ -26,6 +26,7 @@ flavor		funtoo/1.0/linux-gnu/flavor/minimal			stable
 flavor		funtoo/1.0/linux-gnu/flavor/core			stable
 flavor		funtoo/1.0/linux-gnu/flavor/desktop			stable
 flavor		funtoo/1.0/linux-gnu/flavor/workstation			stable
+flavor		funtoo/1.0/linux-gnu/flavor/hardened			exp
 
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/audio		    	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/console-extras	    	stable
