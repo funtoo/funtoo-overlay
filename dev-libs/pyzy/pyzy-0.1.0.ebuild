@@ -22,11 +22,6 @@ src_unpack() {
 	unpack pyzy-${PV}.tar.gz
 }
 
-src_prepare() {
-	# Using open-phrase database downloaded by this ebuild script.
-	epatch "${FILESDIR}"/pyzy-dont-download-dictionary-file.patch || die
-}
-
 src_configure() {
 	econf --enable-db-open-phrase --disable-db-android || die "configure failed"
 }
