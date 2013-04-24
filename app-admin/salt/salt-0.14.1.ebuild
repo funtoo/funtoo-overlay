@@ -8,7 +8,7 @@ inherit distutils eutils
 
 DESCRIPTION="Salt is a remote execution and configuration manager."
 HOMEPAGE="http://saltstack.org/"
-SRC_URI="mirror://github/saltstack/${PN}/${P}.tar.gz"
+SRC_URI="http://pypi.python.org/packages/source/s/${PN}/${P}.tar.gz"
 
 LICENSE="Apache-2.0"
 SLOT="0"
