@@ -77,26 +77,33 @@ method=auto
 
 def block_until_created(connection, retries, interval):
 
-    while retries > 0:
-        nmcli_con_list = check_output(['nmcli', 'con', 'list'], universal_newlines=True)
+    try:
+        retriesInt = int(retries)
 
-        if connection in nmcli_con_list:
-            print("Connection %s registered" % connection)
-            break
+        while retriesInt > 0:
+            nmcli_con_list = check_output(['nmcli', 'con', 'list'], universal_newlines=True)
 
-        time.sleep(interval)
-        retries = retries - 1
+            if connection in nmcli_con_list:
+                print("Connection %s registered" % connection)
+                break
 
-    if retries <= 0:
-        print("Failed to register %s." % connection, file=sys.stderr)
-        sys.exit(1)
-    else:
-        try:
-            nmcli_con_up = check_call(['nmcli', 'con', 'up', 'id', connection])
-            print("Connection %s activated." % connection)
-        except CalledProcessError as error:
-            print("Failed to activate %s." % connection, file=sys.stderr)
-            sys.exit(error.returncode)
+            time.sleep(interval)
+            retriesInt = retriesInt - 1
+
+        if retriesInt <= 0:
+            print("Failed to register %s." % connection, file=sys.stderr)
+            sys.exit(1)
+        else:
+            try:
+                nmcli_con_up = check_call(['nmcli', 'con', 'up', 'id', connection])
+                print("Connection %s activated." % connection)
+            except CalledProcessError as error:
+                print("Failed to activate %s." % connection, file=sys.stderr)
+                sys.exit(error.returncode)
+
+    except ValueError as error:
+        print("Expecting int parsable retry argument", file=sys.stderr)
+        sys.exit(error.returncode)
 
 def main():
     parser = ArgumentParser()
