@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>                                                           
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<herd>no-herd</herd>
+	<maintainer>
+		<email>ari.malinen@gmail.com</email>
+		<name>Ari Malinen</name>
+	</maintainer>
+	<use>
+		<flag name='icons'>Install icons and desktop menu entries</flag>
+	</use>
+</pkgmetadata>
