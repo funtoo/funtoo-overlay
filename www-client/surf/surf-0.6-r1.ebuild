@@ -3,7 +3,7 @@
 # $Header: /var/cvsroot/gentoo-x86/www-client/surf/surf-0.6.ebuild,v 1.3 2013/03/31 17:37:17 nimiux Exp $
 
 EAPI=4
-inherit savedconfig toolchain-funcs eutils
+inherit savedconfig toolchain-funcs
 
 DESCRIPTION="a simple web browser based on WebKit/GTK+"
 HOMEPAGE="http://surf.suckless.org/"
@@ -23,22 +23,18 @@ DEPEND="
 "
 RDEPEND="
 	!sci-chemistry/surf
-	!savedconfig? ( net-misc/curl x11-terms/st )
 	x11-apps/xprop
 	x11-misc/dmenu
 	${DEPEND}
 "
 
 pkg_setup() {
-	elog "net-misc/curl and x11-terms/st will be installed by default to"
-	elog "support the default download command, which can be changed through"
-	elog "the savedconfig mechanism. If you enable USE=savedconfig, you will"
-	elog "need to satisfy requirements for the alternative download command"
-	elog "yourself."
+	elog "You need external tool for downloading. By default surf uses"
+	elog "net-misc/curl and x11-terms/st. The download command can be"
+	elog "changed through the savedconfig mechanism."
 }
 
 src_prepare() {
-	epatch_user
 	sed -i \
 		-e 's|{|(|g;s|}|)|g' \
 		-e 's|\t@|\t|g;s|echo|@&|g' \
@@ -49,6 +45,7 @@ src_prepare() {
 		config.mk Makefile || die "sed failed"
 	restore_config config.h
 	tc-export CC
+	epatch_user
 }
 
 src_install() {
