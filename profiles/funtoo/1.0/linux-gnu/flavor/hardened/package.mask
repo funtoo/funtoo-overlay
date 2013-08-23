@@ -10,6 +10,9 @@
 # Hardened >=sys-devel/gcc-4.4.3-r3 >=gcc-4.4.4-r1 available.
 =sys-devel/gcc-4.4.2*
 
+# Funtoo's new GCC ebuild does not support hardened at the moment
+=sys-devel/gcc-4.6.4*
+
 # =sys-devel/gdb-7.0 is not hardened-ready according to xake & Zorry.
 # sys-devel/gdb-7.1 works fine
 # 2010-03-26 zorry
