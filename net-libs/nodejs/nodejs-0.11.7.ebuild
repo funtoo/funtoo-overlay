@@ -29,7 +29,11 @@ src_prepare() {
 	sed -i -e "/append('-arch/d" tools/gyp/pylib/gyp/xcode_emulation.py || die
 
 	# make sure we use python2.* while using gyp
-	sed -i -e  "s/python/python2/" deps/npm/node_modules/node-gyp/gyp/gyp || die
+	find -type f -exec sed \
+		-e 's_^#!/usr/bin/env python$_&2_' \
+		-e 's_^\(#!/usr/bin/python2\).[45]$_\1_' \
+		-e 's_^#!/usr/bin/python$_&2_' \
+		-e "s_'python'_'python2'_" -i {} \; || die
 
 	# less verbose install output (stating the same as portage, basically)
 	sed -i -e "/print/d" tools/install.py || die
