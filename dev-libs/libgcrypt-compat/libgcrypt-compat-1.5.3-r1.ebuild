@@ -55,5 +55,5 @@ post_src_install() {
 	cd ${D}
 	# We are only installing the .so.x and .so.x.y libs, not the main .so symlink or anything else.
 	# This will be sufficient to allow things like google-chrome to run.
-	rm -rf usr/{lib,lib64}/*.so usr/bin usr/include usr/share || die
+	rm -rf usr/{lib,lib64,lib32}/*.so usr/bin usr/include usr/share || die
 }
