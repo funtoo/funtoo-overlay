@@ -18,7 +18,7 @@ PDEPEND="~x11-themes/emerald-themes-${THEMES_RELEASE}"
 
 RDEPEND=" 
 	>=x11-libs/gtk+-2.8.0:2 
-	>=x11-libs/libwnck-2.30.7 
+	 =x11-libs/libwnck-2.31.0
 	>=x11-wm/compiz-${PV} 
 "
 
