@@ -1,0 +1,3 @@
+# Mask sys-apps/systemd, then all the packages related to systemd will not be
+# installed.
+sys-apps/systemd
