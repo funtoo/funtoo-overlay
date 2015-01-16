@@ -33,7 +33,6 @@ funtoo_redhat = GitTree("funtoo-redhat", "master", "https://github.com/damex/fun
 funtoo_wmfs = GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True)
 faustoo_overlay = GitTree("faustoo", "master", "https://github.com/fmoro/faustoo.git", pull=True)
 sera_overlay = GitTree("sera", "master", "git://git.overlays.gentoo.org/dev/sera.git", pull=True)
-miramir_overlay = GitTree("miramir", "master", "https://github.com/miramir/miramir-layman.git", pull=True)
 vmware_overlay = GitTree("vmware", "master", "git://git.overlays.gentoo.org/proj/vmware.git", pull=True)
 
 #xorg treelet:
@@ -129,7 +128,6 @@ ebuild_additions = [
 
 ebuild_modifications = [
 	InsertEbuilds(vmware_overlay, select=[ "app-emulation/vmware-modules" ], skip=None, replace=True, merge=True),
-	InsertEbuilds(miramir_overlay, select=[ "dev-php/xdebug" ], skip=None, replace=True, merge=True),
 	InsertEbuilds(sera_overlay, select="all", skip=None, replace=True, merge=True),
 	InsertEbuilds(faustoo_overlay, select=[ "app-office/projectlibre-bin" ], skip=None, replace=True),
 	InsertEbuilds(foo_overlay, select="all", skip=["sys-fs/mdev-bb", "sys-fs/mdev-like-a-boss", "media-sound/deadbeef", "media-video/handbrake"], replace=["app-shells/rssh","net-misc/unison"]),

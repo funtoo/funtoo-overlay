@@ -18,7 +18,7 @@ RDEPEND=">=dev-scheme/guile-1.8:=
 DEPEND="${RDEPEND}"
 
 src_prepare() {
-	sed -i -e 's/ifndef noreturn/if 0/' autoopts/stdnoreturn.in.h || die
+	epatch "${FILESDIR}"/autogen-libguile-find.patch
 }
 
 src_configure() {

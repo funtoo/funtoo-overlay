@@ -1,3 +1,6 @@
+# stabilize, xdebug-2.2.5. Ebuild now merged from gentoo-x86
+=dev-php/xdebug-2.2.5 amd64 x86
+
 # FL-1952: stabilize lbfm-1.2.3, pcmanfm-1.2.3:
 =x11-libs/libfm-1.2.3 amd64 86
 =x11-misc/pcmanfm-1.2.3 amd64 x86
