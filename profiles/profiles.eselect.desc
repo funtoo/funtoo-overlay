@@ -50,9 +50,9 @@ mix-ins		funtoo/1.0/linux-gnu/mix-ins/mediaformat-gfx-common	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/mediaformat-gfx-extra	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/mediaformat-video-common	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/mediaformat-video-extra	stable
-mix-ins		funtoo/1.0/linux-gnu/mix-ins/lxde	stable
+mix-ins		funtoo/1.0/linux-gnu/mix-ins/lxde			stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/no-emul-linux-x86		exp
-mix-ins		funtoo/1.0/linux-gnu/mix-ins/no-systemd		exp
+mix-ins		funtoo/1.0/linux-gnu/mix-ins/no-systemd			exp
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/print		    	stable
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/python3-only	    	exp
 mix-ins		funtoo/1.0/linux-gnu/mix-ins/X			    	stable

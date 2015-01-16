@@ -1,4 +1,5 @@
-# Mask sys-apps/systemd, then all the packages related to systemd will not be installed.
+# Mask sys-apps/systemd, then all the packages related to systemd will not be
+# installed.
 sys-apps/systemd
 
 # Since the udev code-base was merged with systemd, it's become more difficult
