@@ -1,3 +1,9 @@
 # Mask sys-apps/systemd, then all the packages related to systemd will not be
 # installed.
 sys-apps/systemd
+
+# Since the udev code-base was merged with systemd, it's become more difficult
+# to use udev without systemd. So, mask udev.
+# Don't worry about this, udev will automatically be replaced by eudev - the
+# systemd-free fork of udev.
+sys-fs/udev
