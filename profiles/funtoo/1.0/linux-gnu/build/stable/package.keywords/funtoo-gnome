@@ -1,3 +1,13 @@
+# FL-2157: stabilize packages required for multilib updates:
+
+=dev-libs/libsigc++-2.4.1 amd64 x86
+=dev-cpp/atkmm-2.22.7-r1 amd64 x86
+=dev-cpp/pangomm-2.34.0-r1 amd64 x86
+=dev-cpp/cairomm-1.10.0-r1 amd64 x86
+
+#https://bugs.gentoo.org/show_bug.cgi?id=540138 set stable keyword to autoconf-archive, dependency for gnome-common:
+=sys-devel/autoconf-archive-2015.02.04 amd64 x86
+
 ## FL-2090: set keywords to appstream-glib and appdata-tools ##
 =dev-libs/appstream-glib-0.3.4 amd64 x86
 =dev-util/appdata-tools-0.1.8-r1 amd64 x86

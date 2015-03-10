@@ -9,7 +9,7 @@ SRC_URI=""
 LICENSE="metapackage"
 SLOT="0"
 KEYWORDS="*"
-IUSE="minimal +svg"
+IUSE="minimal mixer ristretto thunar thunar-volman tumbler xfburn terminal +svg"
 
 RDEPEND=">=x11-themes/gtk-engines-xfce-3:0
 	x11-themes/hicolor-icon-theme
@@ -19,13 +19,13 @@ RDEPEND=">=x11-themes/gtk-engines-xfce-3:0
 	>=xfce-base/xfce4-settings-4.10
 	>=xfce-base/xfdesktop-4.10
 	>=xfce-base/xfwm4-4.10
-	>=xfce-base/thunar-1.6.3
-	>=xfce-extra/thunar-volman-0.8.0
-	>=x11-terms/xfce4-terminal-0.6.3
-	media-gfx/ristretto
-	xfce-extra/tumbler
-	xfce-extra/xfce4-mixer
-	app-cdr/xfburn
+	thunar? ( >=xfce-base/xfdesktop-4.10[thunar=] )
+	thunar-volman? ( >=xfce-extra/thunar-volman-0.8.0 )
+	terminal? ( >=x11-terms/xfce4-terminal-0.6.3 )
+	ristretto? ( media-gfx/ristretto )
+	tumbler? ( xfce-extra/tumbler )
+	mixer? ( xfce-extra/xfce4-mixer )
+	xfburn? ( app-cdr/xfburn )
 	!minimal? (
 		media-fonts/dejavu
 		virtual/freedesktop-icon-theme

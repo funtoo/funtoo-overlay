@@ -1,5 +1,6 @@
-# Temporary mask net-print/hplip-3.15.2 until https://bugs.gentoo.org/show_bug.cgi?id=541178 resolved
->net-print/hplip-3.14.10
+# FL-1703: these versions of crossdev is a forkbomb(s)
+=sys-devel/crossdev-20140917
+=sys-devel/crossdev-20141030
 
 # Mask the very latest layman, which using a a portage repository configs. Not yet in Funtoo.
 >app-portage/layman-2.2.0-r7

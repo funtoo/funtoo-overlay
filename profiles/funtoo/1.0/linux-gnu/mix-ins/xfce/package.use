@@ -1,3 +1,10 @@
+# FL-2159: making xfce-base/xfce4-meta pull in xfce-base/xfdesktop
+# with or without thunar. depending on state of the use flag.
+xfce-base/xfdesktop thunar
+
+# FL-2142: make meta package deps conditional, all flags enabled in this mix-in
+xfce-base/xfce4-meta mixer ristretto thunar thunar-volman tumbler xfburn terminal
+
 # This enables power management change in settings menu
 xfce-base/xfce4-settings upower
 

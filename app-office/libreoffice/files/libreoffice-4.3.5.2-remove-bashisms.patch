@@ -1,4 +1,4 @@
-From d93be02c09575926bc3c4d64a122b81df80c243d Mon Sep 17 00:00:00 2001
+From f53e79acd0d42f5c41e1104056af9cf23e9e2e2a Mon Sep 17 00:00:00 2001
 From: "Andreas K. Huettel (dilfridge)" <dilfridge@gentoo.org>
 Date: Sun, 4 Jan 2015 15:33:35 +0100
 Subject: [PATCH] Replace bash-specific code from configure.ac, fixes build for
@@ -11,6 +11,9 @@ Original patch by Rémi Cardona <remi@gentoo.org>
 
 Change-Id: I815567df8a868c3997e8ac357b8529fded28c950
 Gentoo-Bug: https://bugs.gentoo.org/show_bug.cgi?id=525454
+Reviewed-on: https://gerrit.libreoffice.org/13731
+Reviewed-by: Caolán McNamara <caolanm@redhat.com>
+Tested-by: Caolán McNamara <caolanm@redhat.com>
 ---
  configure.ac | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
@@ -31,5 +34,5 @@ index 8aa33d0..5dbe640 100644
      done
      if test $TESTEXPR
 -- 
-2.2.1
+2.3.0
 

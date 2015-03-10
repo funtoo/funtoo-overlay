@@ -1,8 +1,18 @@
+# FL-2134 -- needs some testing re: rootfstype with real_root (working here)
+>=sys-boot/boot-update-1.7.3
+
+# libtool and libltdl bump, masked for testing
+=sys-devel/libtool-2.4.6
+=dev-libs/libltdl-2.4.6
+
+# FL-971: dhcpcd-6.7.1, masked for testing
+=net-misc/dhcpcd-6.7.1
+
 # FL-2136, FL-1943, eselect bump masked for testing
 =app-admin/eselect-1.4.4
 
 # Fl-2033, nginx-1.7.8, masked for testing
-=www-servers/nginx-1.7.8
+=www-servers/nginx-1.7.8-r1
 
 # FL-1956: debian kernel 3.16.7, masked for testing
 =sys-kernel/debian-sources-3.18.3

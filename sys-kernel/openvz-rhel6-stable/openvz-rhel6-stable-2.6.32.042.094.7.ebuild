@@ -181,4 +181,8 @@ pkg_postinst() {
 	then
 		ln -s linux-${PF} ${ROOT}usr/src/linux
 	fi
+
+	if [ -e ${ROOT}lib/modules ]; then
+		depmod -a ${ROOT}lib/modules
+	fi
 }

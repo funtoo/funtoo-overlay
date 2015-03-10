@@ -23,6 +23,10 @@ depend() {
 }
 
 start_pre() {
+	if [ -z "$( grep \w*worker_processes ${nginx_config} )" ]; then
+		# Automatically scale nginx based on number of CPU cores
+		command_args="$command_args -g \"worker_processes $(cat /proc/cpuinfo | grep '^model name' | wc -l );\""
+	fi
 	if [ "${RC_CMD}" != "restart" ]; then
 		configtest || return 1
 	fi

@@ -1,0 +1,10 @@
+diff -Nuar lxqt-common-0.9.1/config/lxqt.conf lxqt-common-0.9.1-fix/config/lxqt.conf
+--- lxqt-common-0.9.1/config/lxqt.conf	2015-02-14 13:42:58.000000000 +0000
++++ lxqt-common-0.9.1-fix/config/lxqt.conf	2015-03-05 12:39:56.068137644 +0000
+@@ -1,5 +1,5 @@
+ [General]
+-theme=frost
++theme=light
+ icon_theme=oxygen
+ single_click_activate=false
+ tool_button_style=ToolButtonTextBesideIcon

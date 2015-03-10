@@ -39,9 +39,9 @@ vmware_overlay = GitTree("vmware", "master", "git://git.overlays.gentoo.org/proj
 xorg_treelet = GitWriteTree(
 
 .treelet_update(gentoo_src, select=[
-	"x11-base/*", 
-	"x11-drivers/*", 
-	"x11-wm/twm", 
+	"x11-base/*",
+	"x11-drivers/*",
+	"x11-wm/twm",
 	"x11-terms/xterm"
 ])
 """
@@ -114,7 +114,7 @@ profile_steps = [
 
 ebuild_additions = [
 	InsertEbuilds(bar_overlay, select="all", skip=["app-emulation/qemu"], replace=False),
-	InsertEbuilds(bliss_overlay, select="all", skip=["net-p2p/bittorrent-sync"], replace=False),
+	InsertEbuilds(bliss_overlay, select="all", skip=["net-p2p/bittorrent-sync", "app-bin/firefox", "app-bin/libreoffice"], replace=False),
 	InsertEbuilds(squeezebox_overlay, select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_deadbeef, select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_gambas, select="all", skip=None, replace=False),
@@ -154,7 +154,7 @@ eclass_steps = [
 # from all trees to all be inserted (like AutoGlobMask calls) as well as misc. copying of files like licenses and
 # updates files. It also contains misc. tweaks like mirror fixups and Portage tree minification.
 
-treeprep_steps = [	
+treeprep_steps = [
 	SyncDir(plex_overlay.root,"licenses"),
 	MergeUpdates(progress_overlay.root),
 	MergeUpdates(funtoo_overlay.root),

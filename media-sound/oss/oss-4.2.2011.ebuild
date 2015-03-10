@@ -66,6 +66,10 @@ src_prepare() {
 		-i "${S}/setup/srcconf.c" || die
 	sed -e "s;GRC_MAX_QUALITY=3;GRC_MAX_QUALITY=6;g" \
 		-i "${S}/configure" || die
+
+	# Build at the "build" directory instead of /tmp
+	sed -e "s;/tmp/;${WORKDIR}/build/;g" \
+		-i "${S}/setup/Linux/build.sh" || die
 }
 
 src_configure() {
@@ -91,7 +95,7 @@ src_compile() {
 
 	cd "${WORKDIR}/build" && emake build || die
 }
-	
+
 src_install() {
 	newinitd "${FILESDIR}/init.d/oss" oss || die
 	doenvd "${FILESDIR}/env.d/99oss" || die
