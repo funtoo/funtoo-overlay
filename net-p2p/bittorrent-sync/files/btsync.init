@@ -21,7 +21,7 @@ start() {
 	# Sets the umask for the process so that btsync creates files
 	# with group write permissions
 	start-stop-daemon --start --exec "${SYNC_BINARY}" \
-	   --pidfile "${SYNC_PIDFILE}" --background \
+	   --pidfile "${SYNC_PIDFILE}" --background --make-pidfile \
            ${SYNC_UID:+--user "${SYNC_UID}"} \
            ${SYNC_GID:+--group "${SYNC_GID}"} \
            ${SYNC_UMASK:+--umask "${SYNC_UMASK}"} \
