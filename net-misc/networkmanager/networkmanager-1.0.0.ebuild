@@ -19,7 +19,7 @@ LICENSE="GPL-2+"
 SLOT="0" # add subslot if libnm-util.so.2 or libnm-glib.so.4 bumps soname version
 
 IUSE="bluetooth connection-sharing consolekit dhclient +dhcpcd gnutls introspection \
-kernel_linux +nss modemmanager ncurses policykit +ppp resolvconf selinux teamd test upower \
+kernel_linux +nss modemmanager ncurses policykit +ppp resolvconf selinux teamd test \
 vala wext +wifi zeroconf" # wimax
 
 KEYWORDS="*"
@@ -72,7 +72,6 @@ COMMON_DEPEND="
 	ppp? ( >=net-dialup/ppp-2.4.5:=[ipv6] )
 	resolvconf? ( net-dns/openresolv )
 	teamd? ( >=net-misc/libteam-1.9 )
-	upower? ( || ( sys-power/upower sys-power/upower-pm-utils ) )
 
 	plugins_openconnect? ( net-misc/networkmanager-openconnect )
 	plugins_openswan? ( net-misc/networkmanager-openswan )
@@ -85,6 +84,7 @@ RDEPEND="${COMMON_DEPEND}
 	virtual/udev
 	consolekit? ( sys-auth/consolekit )
 	wifi? ( net-wireless/rfkill >=net-wireless/wpa_supplicant-0.7.3-r3[dbus] )
+	|| ( sys-power/upower sys-power/upower-pm-utils )
 "
 DEPEND="${COMMON_DEPEND}
 	dev-util/gtk-doc-am
@@ -157,9 +157,6 @@ src_prepare() {
 
 src_configure() {
 	local myconf
-	if use upower ; then
-		myconf="${myconf} --with-suspend-resume=$(usex upower upower)"
-	fi
 
 	# Same hack as net-dialup/pptpd to get proper plugin dir for ppp, bug #519986
 	if use ppp; then
@@ -191,7 +188,7 @@ src_configure() {
 		--enable-concheck \
 		--with-crypto=$(usex nss nss gnutls) \
 		--with-session-tracking=$(usex consolekit consolekit) \
-		--with-suspend-resume=$(usex upower upower) \
+		--with-suspend-resume=upower \
 		$(use_enable bluetooth bluez5-dun) \
 		$(use_enable introspection) \
 		$(use_enable ppp) \

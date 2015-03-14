@@ -1,0 +1,52 @@
+--- src/_eselect.org	2014-12-22 22:54:40.000000000 +0000
++++ src/_eselect	2015-03-14 12:29:15.000000000 +0000
+@@ -54,16 +54,39 @@
+ }
+ 
+ _eselect_profile () {
+-  local profilelist
+-  if (( $words[(I)(set)] )); then
+-    profilelist=(${${(f)"$(eselect --brief --color=no profile list)"}/:/\\:})
+-    _values -w "available profiles" $profilelist[@] \
+-      "--force[Forcibly set the symlink]" && return 0
+-  fi
+-  _values "profile options" $common_values \
+-    "list[List available profile symlink targets]" \
+-    "show[Show the current make.profile symlink]" \
+-    "set[Set a new profile symlink target]" && return 0
++	local profilelist
++		if (( $words[(I)(set-flavor)] )); then
++			profilelist=(${${${(M)${(f)"$(eselect profile list | grep /flavor/)"}## *}// \**/}//(  \[*\]   |  \[*\]  )/})
++			_values -w "available profiles" $profilelist[@] && return 0
++		fi
++		if (( $words[(I)(set-build)] )); then
++			profilelist=(${${${(M)${(f)"$(eselect profile list | grep /build/)"}## *}// \**/}//(  \[*\]   |  \[*\]  )/})
++			_values -w "available profiles" $profilelist[@] && return 0
++		fi
++		if (( $words[(I)(add)] )); then
++			profilelist=(${${${(M)${(f)"$(eselect profile list | grep /mix-ins/ | grep -v "*")"}## *}// \**/}//(  \[*\]   |  \[*\]  )/})
++			[[ -n ${profilelist} ]] && _values -w "available profiles" $profilelist[@]
++		return 0
++		fi
++		if (( $words[(I)(remove)] )); then
++			profilelist=(${${${(M)${(f)"$(eselect profile list | grep /mix-ins/ | grep "*")"}## *}// \**/}//(  \[*\]   |  \[*\]  )/})
++			[[ -n ${profilelist} ]] && _values -w "available profiles" $profilelist[@]
++		return 0
++		fi
++		if (( $words[(I)(replace)] )); then
++			profilelist=(${${${(M)${(f)"$(eselect profile list)"}## *}// \**/}//(  \[*\]   |  \[*\]  )/})
++			[[ -n ${profilelist} ]] && _values -w "available profiles" $profilelist[@] \
++			"-f[Force profile change]" && return 0
++		fi
++	_values "profile options" $common_values \
++		"add[Adds profiles]" \
++		"clean[Remove invalid profiles]" \
++		"list[List available profile targets]" \
++		"remove[Remove a profile]" \
++		"replace[Replace a profile]" \
++		"set-build[Change the build profile]" \
++		"set-flavor[Change the flavor profile]" \
++		"show[Display current profiles]" && return 0
+ }
+ 
+ _eselect_fontconfig () {

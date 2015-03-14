@@ -2,12 +2,11 @@
 
 EAPI="5"
 
-inherit autotools bash-completion-r1 eutils flag-o-matic git-2 linux-info readme.gentoo systemd user versionator udev multilib-minimal
+inherit autotools bash-completion-r1 eutils flag-o-matic linux-info readme.gentoo systemd user versionator udev multilib-minimal
 
 DESCRIPTION="A networked sound server with an advanced plugin system"
-HOMEPAGE="http://www.pulseaudio.org/"
-EGIT_REPO_URI="https://github.com/pulseaudio/pulseaudio"
-EGIT_COMMIT="e728bcf614924bfa37627653c32ac3ae4d604d4e"
+HOMEPAGE="http://www.pulseaudio.org"
+SRC_URI="http://freedesktop.org/software/${PN}/releases/${P}.tar.xz"
 
 # libpulse-simple and libpulse link to libpulse-core; this is daemon's
 # library and can link to gdbm and other GPL-only libraries. In this
@@ -18,96 +17,86 @@ LICENSE="!gdbm? ( LGPL-2.1 ) gdbm? ( GPL-2 )"
 SLOT="0"
 KEYWORDS="*"
 
-IUSE="+alsa +alsa-plugin +asyncns bluetooth +caps dbus doc equalizer +gdbm +glib
-gnome gtk ipv6 jack libsamplerate lirc neon +orc oss qt4 realtime ssl systemd
-system-wide tcpd test +udev +webrtc-aec +X xen zeroconf"
+IUSE="+X +alsa +alsa-plugin +asyncns +caps +gdbm +glib +orc +speex +udev +webrtc-aec
+	adrian-aec bluetooth dbus doc equalizer gcov gnome gtk ipv6 jack libsamplerate lirc
+	native-headset neon ofono-headset oss qt4 realtime ssl systemd system-wide tcpd test xen zeroconf"
 
 # See "*** BLUEZ support not found (requires D-Bus)" in configure.ac
-REQUIRED_USE="bluetooth? ( dbus )"
-
-# libpcre needed in some cases, bug #472228
-RDEPEND="
-	|| (
-		elibc_glibc? ( virtual/libc )
-		elibc_uclibc? ( virtual/libc )
-		dev-libs/libpcre
-	)
-	>=media-libs/libsndfile-1.0.20[${MULTILIB_USEDEP}]
-	X? (
-		>=x11-libs/libX11-1.4.0[${MULTILIB_USEDEP}]
-		>=x11-libs/libxcb-1.6[${MULTILIB_USEDEP}]
-		x11-libs/libSM[${MULTILIB_USEDEP}]
-		x11-libs/libICE[${MULTILIB_USEDEP}]
-		x11-libs/libXtst[${MULTILIB_USEDEP}]
-	)
-	caps? ( >=sys-libs/libcap-2.22-r2[${MULTILIB_USEDEP}] )
-	libsamplerate? ( >=media-libs/libsamplerate-0.1.1-r1 )
-	alsa? ( >=media-libs/alsa-lib-1.0.19 )
-	glib? ( >=dev-libs/glib-2.4.0[${MULTILIB_USEDEP}] )
-	zeroconf? ( >=net-dns/avahi-0.6.12[dbus] )
-	jack? ( >=media-sound/jack-audio-connection-kit-0.117 )
-	tcpd? ( sys-apps/tcp-wrappers[${MULTILIB_USEDEP}] )
-	lirc? ( app-misc/lirc )
-	dbus? ( >=sys-apps/dbus-1.0.0[${MULTILIB_USEDEP}] )
-	gtk? ( x11-libs/gtk+:3 )
-	gnome? ( >=gnome-base/gconf-2.4.0 )
-	bluetooth? (
-		net-wireless/bluez:=
-		>=sys-apps/dbus-1.0.0
-		media-libs/sbc
-	)
-	asyncns? ( net-libs/libasyncns[${MULTILIB_USEDEP}] )
-	udev? ( >=virtual/udev-143[hwdb(+)] )
-	realtime? ( sys-auth/rtkit )
-	equalizer? ( sci-libs/fftw:3.0 )
-	orc? ( >=dev-lang/orc-0.4.9 )
-	ssl? ( dev-libs/openssl )
-	>=media-libs/speex-1.2_rc1
-	gdbm? ( sys-libs/gdbm )
-	webrtc-aec? ( media-libs/webrtc-audio-processing )
-	xen? ( app-emulation/xen-tools )
-	systemd? ( sys-apps/systemd:0=[${MULTILIB_USEDEP}] )
-	dev-libs/json-c[${MULTILIB_USEDEP}]
-	abi_x86_32? ( !<=app-emulation/emul-linux-x86-soundlibs-20131008-r1
-		!app-emulation/emul-linux-x86-soundlibs[-abi_x86_32(-)] )
-	>=sys-devel/libtool-2.4.2
-"
-# it's a valid RDEPEND, libltdl.so is used
-
-DEPEND="${RDEPEND}
-	sys-devel/m4
-	doc? ( app-doc/doxygen )
-	test? ( dev-libs/check )
-	X? (
-		x11-proto/xproto[${MULTILIB_USEDEP}]
-		>=x11-libs/libXtst-1.0.99.2[${MULTILIB_USEDEP}]
-	)
-	dev-libs/libatomic_ops
-	virtual/pkgconfig
-	system-wide? ( || ( dev-util/unifdef sys-freebsd/freebsd-ubin ) )
-	dev-util/intltool
-	>=sys-devel/gettext-0.18.1
-"
-# This is a PDEPEND to avoid a circular dep
-PDEPEND="alsa-plugin? ( >=media-plugins/alsa-plugins-1.0.27-r1[pulseaudio] )"
+REQUIRED_USE="adrian-aec? ( speex )
+	bluetooth? ( dbus )
+	native-headset? ( bluetooth )
+	ofono-headset? ( bluetooth )
+	udev? ( || ( alsa oss ) )
+	webrtc-aec? ( speex )"
 
 # alsa-utils dep is for the alsasound init.d script (see bug #155707)
 # bluez dep is for the bluetooth init.d script
 # PyQt4 dep is for the qpaeq script
-RDEPEND="${RDEPEND}
-	equalizer? ( qt4? ( dev-python/PyQt4[dbus] ) )
-	system-wide? (
-		alsa? ( media-sound/alsa-utils )
-		bluetooth? ( net-wireless/bluez:= )
-	)
-"
+# libpcre needed in some cases, bug #472228
+# it's a valid RDEPEND, libltdl.so is used
+RDEPEND=">=sys-devel/libtool-2.4.2
+	|| ( elibc_glibc? ( virtual/libc )
+		elibc_uclibc? ( virtual/libc )
+		dev-libs/libpcre )
+	>=media-libs/libsndfile-1.0.20[${MULTILIB_USEDEP}]
+	X? ( >=x11-libs/libX11-1.4.0[${MULTILIB_USEDEP}]
+		>=x11-libs/libxcb-1.6[${MULTILIB_USEDEP}]
+		x11-libs/libSM[${MULTILIB_USEDEP}]
+		x11-libs/libICE[${MULTILIB_USEDEP}]
+		x11-libs/libXtst[${MULTILIB_USEDEP}] )
+	alsa? ( >=media-libs/alsa-lib-1.0.19 )
+	asyncns? ( net-libs/libasyncns[${MULTILIB_USEDEP}] )
+	bluetooth? ( net-wireless/bluez:=
+		>=sys-apps/dbus-1.0.0
+		media-libs/sbc )
+	caps? ( >=sys-libs/libcap-2.22-r2[${MULTILIB_USEDEP}] )
+	dbus? ( >=sys-apps/dbus-1.0.0[${MULTILIB_USEDEP}] )
+	dev-libs/json-c[${MULTILIB_USEDEP}]
+	equalizer? ( qt4? ( dev-python/PyQt4[dbus] )
+		sci-libs/fftw:3.0 )
+	gdbm? ( sys-libs/gdbm )
+	glib? ( >=dev-libs/glib-2.4.0[${MULTILIB_USEDEP}] )
+	gnome? ( >=gnome-base/gconf-2.4.0 )
+	gtk? ( x11-libs/gtk+:3 )
+	jack? ( >=media-sound/jack-audio-connection-kit-0.117 )
+	libsamplerate? ( >=media-libs/libsamplerate-0.1.1-r1 )
+	lirc? ( app-misc/lirc )
+	orc? ( >=dev-lang/orc-0.4.9 )
+	realtime? ( sys-auth/rtkit )
+	speex? ( >=media-libs/speex-1.2_rc1 )
+	ssl? ( dev-libs/openssl )
+	systemd? ( sys-apps/systemd:0=[${MULTILIB_USEDEP}] )
+	system-wide? ( alsa? ( media-sound/alsa-utils )
+		bluetooth? ( net-wireless/bluez:= ) )
+	tcpd? ( sys-apps/tcp-wrappers[${MULTILIB_USEDEP}] )
+	udev? ( >=virtual/udev-143[hwdb(+)] )
+	webrtc-aec? ( media-libs/webrtc-audio-processing )
+	xen? ( app-emulation/xen-tools )
+	zeroconf? ( >=net-dns/avahi-0.6.12[dbus] )
+	abi_x86_32? ( !<=app-emulation/emul-linux-x86-soundlibs-20131008-r1
+		!app-emulation/emul-linux-x86-soundlibs[-abi_x86_32(-)] )"
+
+DEPEND="${RDEPEND}
+	dev-util/intltool
+	dev-libs/libatomic_ops
+	>=sys-devel/gettext-0.18.1
+	sys-devel/m4
+	virtual/pkgconfig
+	X? ( x11-proto/xproto[${MULTILIB_USEDEP}]
+		>=x11-libs/libXtst-1.0.99.2[${MULTILIB_USEDEP}] )
+	doc? ( app-doc/doxygen )
+	system-wide? ( || ( dev-util/unifdef sys-freebsd/freebsd-ubin ) )
+	test? ( dev-libs/check )"
+
+# This is a PDEPEND to avoid a circular dep
+PDEPEND="alsa-plugin? ( >=media-plugins/alsa-plugins-1.0.27-r1[pulseaudio] )"
 
 pkg_pretend() {
 	CONFIG_CHECK="~HIGH_RES_TIMERS"
 	WARNING_HIGH_RES_TIMERS="CONFIG_HIGH_RES_TIMERS:\tis not set (required for enabling timer-based scheduling in pulseaudio)\n"
 	check_extra_config
 
-	if linux_config_exists; then
+	if linux_config_exists ; then
 		local snd_hda_prealloc_size=$(linux_chkconfig_string SND_HDA_PREALLOC_SIZE)
 		if [ -n "${snd_hda_prealloc_size}" ] && [ "${snd_hda_prealloc_size}" -lt 2048 ]; then
 			ewarn "A preallocated buffer-size of 2048 (kB) or higher is recommended for the HD-audio driver!"
@@ -121,7 +110,7 @@ pkg_setup() {
 
 	enewgroup audio 18 # Just make sure it exists
 
-	if use system-wide; then
+	if use system-wide ; then
 		enewgroup pulse-access
 		enewgroup pulse
 		enewuser pulse -1 -1 /var/run/pulse pulse,audio
@@ -147,68 +136,81 @@ multilib_src_configure() {
 		myconf+=( --with-database=simple )
 	fi
 
-	if use bluetooth; then
-		if has_version '<net-wireless/bluez-5'; then
-			myconf+=( --disable-bluez5 --enable-bluez4 )
-		else
-			 myconf+=( --enable-bluez5 --disable-bluez4 )
-		fi
+	if use bluetooth ; then
+		if multilib_is_native_abi; then
+			if has_version '<net-wireless/bluez-5'; then
+				myconf+=( --disable-bluez5 --enable-bluez4 )
+			else
+				myconf+=( --enable-bluez5 --disable-bluez4
+					$(use_enable native-headset bluez5-native-headset)
+					$(use_enable ofono-headset bluez5-ofono-headset) )
+			fi
+ 		fi
+
 	else
 		myconf+=( --disable-bluez5 --disable-bluez4 )
 	fi
 
-	myconf+=(
-		--enable-largefile
-		$(use_enable glib glib2)
+	myconf+=( --localstatedir="${EPREFIX}"/var
+		--with-udev-rules-dir="${EPREFIX}/$(get_udevdir)"/rules.d
+		--disable-coreaudio-output
+		--disable-esound
 		--disable-solaris
+		--disable-waveout
+		--enable-largefile
+		$(use_enable X x11)
+		$(use_enable adrian-aec)
 		$(use_enable asyncns)
+		$(use_enable glib glib2)
 		$(use_enable oss oss-output)
+		$(use_enable oss oss-wrapper)
 		$(use_enable alsa)
-		$(use_enable lirc)
-		$(use_enable neon neon-opt)
-		$(use_enable tcpd tcpwrap)
-		$(use_enable jack)
-		$(use_enable zeroconf avahi)
 		$(use_enable dbus)
+		$(use_enable gcov)
 		$(use_enable gnome gconf)
 		$(use_enable gtk gtk3)
+		$(use_enable jack)
+		$(use_enable ipv6)
 		$(use_enable libsamplerate samplerate)
+		$(use_enable lirc)
+		$(use_enable neon neon-opt)
 		$(use_enable orc)
-		$(use_enable X x11)
+		$(use_enable ssl openssl)
+		$(use_enable systemd systemd-daemon)
+		$(use_enable systemd systemd-journal)
+		$(use_enable systemd systemd-login)
+		$(use_enable tcpd tcpwrap)
 		$(use_enable test default-build-tests)
 		$(use_enable udev)
-		$(use_enable systemd)
-		$(use_enable systemd systemd-journal)
-		$(use_enable ipv6)
-		$(use_enable ssl openssl)
+		$(use_enable udev hal-compat)
 		$(use_enable webrtc-aec)
 		$(use_enable xen)
+		$(use_enable zeroconf avahi)
 		$(use_with caps)
 		$(use_with equalizer fftw)
-		--disable-adrian-aec
-		--disable-esound
-		--localstatedir="${EPREFIX}"/var
-		--with-udev-rules-dir="${EPREFIX}/$(get_udevdir)"/rules.d
-	)
+		$(use_with speex) )
 
-	if ! multilib_is_native_abi; then
+	if ! multilib_is_native_abi ; then
 		# disable all the modules and stuff
-		myconf+=(
-			--disable-oss-output
+		# TODO: fill the list
+		myconf+=( --disable-adrian-aec
 			--disable-alsa
-			--disable-lirc
-			--disable-jack
 			--disable-avahi
-			--disable-gconf
-			--disable-gtk3
-			--disable-samplerate
 			--disable-bluez4
 			--disable-bluez5
-			--disable-udev
-			--disable-systemd
+			--disable-gconf
+			--disable-gtk3
+			--disable-jack
+			--disable-lirc
 			--disable-openssl
 			--disable-orc
-			--disable-webrtc-aec
+			--disable-oss-output
+			--disable-samplerate
+			--disable-systemd-daemon
+			--disable-systemd-journal
+			--disable-systemd-login
+			--disable-udev
+			--disable-webrtx-aec
 			--disable-xen
 			--without-fftw
 
@@ -220,8 +222,7 @@ multilib_src_configure() {
 			ac_cv_lib_ltdl_lt_dladvise_init=yes
 			--with-database=simple
 			LIBSPEEX_CFLAGS=' '
-			LIBSPEEX_LIBS=' '
-		)
+			LIBSPEEX_LIBS=' ' )
 	fi
 
 	ECONF_SOURCE=${S} \
@@ -232,14 +233,16 @@ multilib_src_compile() {
 	if multilib_is_native_abi; then
 		emake
 	else
-		emake -C src libpulse{,dsp,-simple,-mainloop-glib}.la
+		local targets=( libpulse.la libpulse-simple.la )
+		use glib && targets+=( libpulse-mainloop-glib.la )
+		emake -C src ${targets[*]}
 	fi
 }
 
 src_compile() {
 	multilib-minimal_src_compile
 
-	if use doc; then
+	if use doc ; then
 		pushd doxygen
 		doxygen doxygen.conf
 		popd
@@ -259,11 +262,13 @@ multilib_src_install() {
 	if multilib_is_native_abi; then
 		emake -j1 DESTDIR="${D}" bashcompletiondir="$(get_bashcompdir)" install
 	else
+		local targets=( libpulse.la libpulse-simple.la )
+		use glib && targets+=( libpulse-mainloop-glib.la )
 		emake DESTDIR="${D}" install-pkgconfigDATA
 		emake DESTDIR="${D}" -C src \
 			install-libLTLIBRARIES \
 			install-padsplibLTLIBRARIES \
-			lib_LTLIBRARIES="libpulse.la libpulse-simple.la libpulse-mainloop-glib.la" \
+			lib_LTLIBRARIES="${targets[*]}" \
 			install-pulseincludeHEADERS
 	fi
 }
@@ -272,7 +277,7 @@ multilib_src_install_all() {
 	# Drop the script entirely if X is disabled
 	use X || rm "${ED}"/usr/bin/start-pulseaudio-x11
 
-	if use system-wide; then
+	if use system-wide ; then
 		newconfd "${FILESDIR}/pulseaudio.conf.d" pulseaudio
 
 		use_define() {
@@ -281,7 +286,7 @@ multilib_src_install_all() {
 			use "$1" && echo "-D$define" || echo "-U$define"
 		}
 
-		unifdef $(use_define avahi) \
+		unifdef $(use_define zeroconf avahi) \
 			$(use_define alsa) \
 			$(use_define bluetooth) \
 			$(use_define udev) \
@@ -297,7 +302,7 @@ multilib_src_install_all() {
 
 	dodoc NEWS README todo
 
-	if use doc; then
+	if use doc ; then
 		pushd doxygen/html
 		dohtml *
 		popd
@@ -316,7 +321,7 @@ multilib_src_install_all() {
 }
 
 pkg_postinst() {
-	if use system-wide; then
+	if use system-wide ; then
 		elog "PulseAudio in Gentoo can use a system-wide pulseaudio daemon."
 		elog "This support is enabled by starting the pulseaudio init.d ."
 		elog "To be able to access that you need to be in the group pulse-access."
@@ -334,9 +339,20 @@ pkg_postinst() {
 		fi
 	fi
 
-	if use equalizer && ! use qt4; then
+	if use equalizer && ! use qt4 ; then
 		elog "You've enabled the 'equalizer' USE-flag but not the 'qt4' USE-flag."
 		elog "This will build the equalizer module, but the 'qpaeq' tool"
 		elog "which is required to set equalizer levels will not work."
 	fi
+
+	if use native-headset && use ofono-headset ; then
+		elog "You have enabled both native and ofono headset profiles. The runtime decision"
+		elog "which to use is done via the 'headset' argument of module-bluetooth-discover."
+	fi
+
+	if use libsamplerate ; then
+		elog "The libsamplerate based resamplers are now deprecated, because they offer no"
+		elog "particular advantage over speex. Upstream suggests disabling them."
+	fi
+
 }

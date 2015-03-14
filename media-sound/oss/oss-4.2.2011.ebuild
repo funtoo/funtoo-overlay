@@ -70,6 +70,12 @@ src_prepare() {
 	# Build at the "build" directory instead of /tmp
 	sed -e "s;/tmp/;${WORKDIR}/build/;g" \
 		-i "${S}/setup/Linux/build.sh" || die
+
+	# Remove bundled libflashsupport. Deprecated since 2006.
+	rm ${S}/oss/lib/flashsupport.c || die
+	sed -e "/^.*flashsupport.c .*/d" \
+		-i "${S}/setup/Linux/build.sh" \
+		-i "${S}/setup/Linux/oss/build/install.sh" || die
 }
 
 src_configure() {
@@ -106,12 +112,12 @@ src_install() {
 	insinto /usr/${libdir}/pkgconfig
 	doins "${FILESDIR}"/OSSlib.pc || die
 
-	dosym oss/lib/libOSSlib.so /usr/${libdir}/libOSSlib.so || die
-	dosym oss/lib/libossmix.so /usr/${libdir}/libossmix.so || die
+	local oss_libs="libOSSlib.so libossmix.so"
+	use alsa && oss_libs+=" libsalsa.so.2.0.0"
 
-	if use alsa ; then
-		dosym oss/lib/libsalsa.so.2.0.0 /usr/${libdir}/libsalsa.so.2.0.0 || die
-	fi
+	for oss_lib in ${oss_libs} ; do
+		dosym oss/lib/${oss_lib} /usr/${libdir}/${oss_lib} || die
+	done
 
 	dosym /usr/${libdir}/oss/include /usr/include/oss || die
 }
