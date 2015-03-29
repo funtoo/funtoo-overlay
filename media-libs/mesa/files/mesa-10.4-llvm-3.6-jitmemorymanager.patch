@@ -1,0 +1,25 @@
+As of r223183 EngineBuilder::setMCJITMemoryManager() takes a unique_ptr.
+---
+ src/gallium/auxiliary/gallivm/lp_bld_misc.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index fe3c754..5c01f53 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -500,8 +500,13 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
+        MM = new ShaderMemoryManager(JMM);
+        *OutCode = MM->getGeneratedCode();
+ 
++#if HAVE_LLVM >=0x0306
++       builder.setMCJITMemoryManager(std::unique_ptr<ShaderMemoryManager>(MM));
++#else
+        builder.setMCJITMemoryManager(MM);
+ #endif
++
++#endif
+    } else {
+ #if HAVE_LLVM < 0x0306
+        BaseMemoryManager* JMM = reinterpret_cast<BaseMemoryManager*>(CMM);
+--
+1.8.5.5
