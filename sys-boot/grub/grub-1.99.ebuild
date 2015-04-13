@@ -5,7 +5,7 @@ EAPI=3
 inherit autotools flag-o-matic toolchain-funcs
 
 BINFONT="unifont-1.0.pf2"
-SRC_URI="ftp://ftp.gnu.org/gnu/${PN}/${P}.tar.xz binfont? ( http://build.funtoo.org/distfiles/grub/${BINFONT}.xz )"
+SRC_URI="ftp://ftp.gnu.org/gnu/${PN}/${P}.tar.xz binfont? ( mirror://funtoo/distfiles/grub/${BINFONT}.xz )"
 
 DESCRIPTION="GNU GRUB 2 boot loader"
 HOMEPAGE="http://www.gnu.org/software/grub/"

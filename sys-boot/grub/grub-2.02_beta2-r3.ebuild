@@ -37,7 +37,7 @@ DEJAVU=dejavu-sans-ttf-2.34
 UNIFONT=unifont-7.0.01
 SRC_URI+=" mirror://gnu/unifont/${UNIFONT}/${UNIFONT}.pcf.gz
 	truetype? ( mirror://sourceforge/dejavu/${DEJAVU}.zip )"
-SRC_URI+=" mirror://gentoo/${MY_P}.tar.xz http://build.funtoo.org/distfiles/grub/${BINFONT}.xz"
+SRC_URI+=" mirror://gentoo/${MY_P}.tar.xz mirror://funtoo/distfiles/grub/${BINFONT}.xz"
 
 DESCRIPTION="GNU GRUB boot loader"
 HOMEPAGE="http://www.gnu.org/software/grub/"

@@ -14,7 +14,7 @@ else
 		SRC_URI="mirror://gnu-alpha/${PN}/${MY_P}.tar.xz"
 	else
 		SRC_URI="mirror://gnu/${PN}/${MY_P}.tar.xz
-		mirror://gentoo/${MY_P}.tar.xz http://build.funtoo.org/distfiles/grub/${BINFONT}.xz"
+		mirror://gentoo/${MY_P}.tar.xz mirror://funtoo/distfiles/grub/${BINFONT}.xz"
 	fi
 	KEYWORDS="amd64 x86"
 	S=${WORKDIR}/${MY_P}

@@ -3,7 +3,7 @@ EAPI="5"
 RESTRICT="mirror"
 DESCRIPTION="Themes for Gnome Shell Metacity and Gtk-2.0 Gtk-3.0"
 HOMEPAGE="http://tiheum.deviantart.com/art/GTK3-Gnome-Shell-Faience-255097456"
-SRC_URI="http://build.funtoo.org/distfiles/gtk3_gnome_shell___faience_by_tiheum-d47vmgg.zip"
+SRC_URI="mirror://funtoo/distfiles/gtk3_gnome_shell___faience_by_tiheum-d47vmgg.zip"
 
 LICENSE="as-is"
 SLOT="0"
