@@ -7,7 +7,7 @@ inherit eutils multilib linux-info linux-mod toolchain-funcs versionator pax-uti
 DESCRIPTION="Ati precompiled drivers for Radeon Evergreen (HD5000 Series) and newer chipsets"
 HOMEPAGE="http://www.amd.com"
 SLOT="1"
-DRIVERS_URI="http://build.funtoo.org/distfiles/amd-catalyst-14-9-linux-x86-x86-64.zip"
+DRIVERS_URI="mirror://funtoo/distfiles/amd-catalyst-14-9-linux-x86-x86-64.zip"
 XVBA_SDK_URI="http://developer.amd.com/wordpress/media/2012/10/xvba-sdk-0.74-404001.tar.gz"
 SRC_URI="${DRIVERS_URI} ${XVBA_SDK_URI}"
 FOLDER_PREFIX="common/"

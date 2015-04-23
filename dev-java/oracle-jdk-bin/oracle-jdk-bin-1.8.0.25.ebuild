@@ -31,7 +31,7 @@ JCE_FILE="${JCE_DIR}JDK8.zip"
 
 DESCRIPTION="Oracle's Java SE Development Kit"
 HOMEPAGE="http://www.oracle.com/technetwork/java/javase/"
-MIR_URI="http://build.funtoo.org/distfiles/oracle-java"
+MIR_URI="mirror://funtoo/distfiles/oracle-java"
 SRC_URI=" 
 	amd64? ( ${MIR_URI}/${AT_amd64} examples? ( ${MIR_URI}/${DEMOS_amd64} ) )
 	arm? ( ${MIR_URI}/${AT_arm} examples? ( ${MIR_URI}/${DEMOS_arm} ) )

@@ -6,7 +6,7 @@ inherit linux-info
 
 DESCRIPTION="Broadcom's NetXtremeII (bnx2 and bnx2x) Gigabit and 10GBe drivers"
 HOMEPAGE="http://www.broadcom.com/support/ethernet_nic/netxtremeii.php"
-SRC_URI="http://build.funtoo.org/distfiles/broadcom-linux-${PV}.zip"
+SRC_URI="mirror://funtoo/distfiles/broadcom-linux-${PV}.zip"
 
 LICENSE="GPL-2"
 SLOT="0"

@@ -14,7 +14,7 @@ VERSION_ISCSI='2.0-872'
 VERSION_UNIONFS_FUSE='0.24'
 VERSION_GPG='1.4.11'
 
-MY_HOME="http://build.funtoo.org/distfiles/${PN}"
+MY_HOME="mirror://funtoo/distfiles/${PN}"
 RH_HOME="ftp://sources.redhat.com/pub"
 DM_HOME="http://people.redhat.com/~heinzm/sw/dmraid/src"
 BB_HOME="http://www.busybox.net/downloads"

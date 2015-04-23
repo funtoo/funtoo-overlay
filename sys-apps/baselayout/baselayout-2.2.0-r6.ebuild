@@ -9,7 +9,7 @@ GITHUB_REPO="baselayout"
 GITHUB_USER="funtoo"
 GITHUB_TAG="baselayout-2.2.0-r6"
 SRC_URI="https://www.github.com/${GITHUB_USER}/${GITHUB_REPO}/tarball/${GITHUB_TAG} ->  ${GITHUB_TAG}.tar.gz 
-http://build.funtoo.org/distfiles/realdev/realdev-1.0.tar.bz2"
+mirror://funtoo/distfiles/realdev/realdev-1.0.tar.bz2"
 S=$WORKDIR/$GITHUB_TAG
 S2=$WORKDIR/realdev-1.0
 

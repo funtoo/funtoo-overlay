@@ -11,7 +11,7 @@ SLOT="1"
 INSTALLER="fglrx-installer_14.201.orig.tar.gz"
 # Original location, resolveable only via IPv6 (duh)
 #DRIVERS_URI="http://archive.ubuntu.com/ubuntu/pool/restricted/f/fglrx-installer/$INSTALLER"
-DRIVERS_URI="http://build.funtoo.org/distfiles/$INSTALLER"
+DRIVERS_URI="mirror://funtoo/distfiles/$INSTALLER"
 XVBA_SDK_URI="http://developer.amd.com/wordpress/media/2012/10/xvba-sdk-0.74-404001.tar.gz"
 SRC_URI="${DRIVERS_URI} ${XVBA_SDK_URI}"
 FOLDER_PREFIX="common/"

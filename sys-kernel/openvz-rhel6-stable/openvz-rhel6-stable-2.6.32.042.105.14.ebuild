@@ -15,7 +15,7 @@ OVZ_KV=${OVZ_KERNEL}.${OVZ_REV}
 KV_FULL=${PN}-${PVR}
 EXTRAVERSION=-${OVZ_KV}
 KERNEL_ARCHIVE="linux-${CKV}.tar.bz2"
-KERNEL_URI="http://build.funtoo.org/distfiles/${KERNEL_ARCHIVE}"
+KERNEL_URI="mirror://funtoo/distfiles/${KERNEL_ARCHIVE}"
 RESTRICT="binchecks strip mirror"
 
 LICENSE="GPL-2"
