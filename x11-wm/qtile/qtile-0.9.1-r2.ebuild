@@ -21,12 +21,11 @@ REQUIRED_USE="widget-mpris? ( dbus )
 	widget-wlan? ( python_abis_2.7 )
 "
 
-RDEPEND="
+RDEPEND="x11-libs/cairo[xcb] x11-libs/pango
 	python_abis_3.3? ( >=dev-python/xcffib-0.1.11[python_targets_python3_3] )
 	python_abis_2.7? ( >=dev-python/xcffib-0.1.11[python_targets_python2_7] )
 	python_abis_3.3? ( >=dev-python/cairocffi-0.6[python_targets_python3_3] )
 	python_abis_2.7? ( >=dev-python/cairocffi-0.6[python_targets_python2_7] )
-	x11-libs/pango
 	python_abis_3.3? ( dev-python/asyncio[python_targets_python3_3] )
 	python_abis_2.7? ( dev-python/trollius[python_targets_python2_7] )
 	$(python_abi_depend ">=dev-python/six-1.4.1" )
@@ -58,6 +57,47 @@ DEPEND="${RDEPEND}
 	$(python_abi_depend "dev-python/setuptools" )
 "
 DOCS=( CHANGELOG README.rst )
+
+src_prepare() {
+	if ! use widget-google-calendar ; then
+		(
+			sed -i '/safe_import(".google_calendar", "GoogleCalendar")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/google_calendar.py*
+		)
+	fi
+	if ! use widget-imap ; then
+		(
+			sed -i '/safe_import(".imapwidget", "ImapWidget")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/imapwidget.py*
+		)
+	fi
+	if ! use widget-launchbar ; then
+		(
+			sed -i '/safe_import(".launchbar", "LaunchBar")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/launchbar.py*
+		)
+	fi
+	if ! use widget-mpd ; then
+		(
+			sed -i '/safe_import(".mpdwidget", "Mpd")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/mpdwidget.py*
+		)
+	fi
+	if ! use widget-wlan ; then
+		(
+			sed -i '/safe_import(".wlan", "Wlan")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/wlan.py*
+		)
+	fi
+	if ! use widget-mpris ; then
+		(
+			sed -i '/safe_import(".mpriswidget", "Mpris")/d' libqtile/widget/__init__.py
+			sed -i '/safe_import(".mpris2widget", "Mpris2")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/mpriswidget.py*
+			rm libqtile/widget/mpris2widget.py*
+		)
+	fi
+}
 
 python_install_all() {
 	distutils-r1_python_install_all
