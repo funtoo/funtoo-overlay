@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-	<herd>funto>
+	<herd>funtoo</herd>
 	<maintainer>
 		<email>antoine.pinsard@gmail.com</email>
 		<name>Antoine Pinsard</name>
 	</maintainer>
+	<longdescription>
+		A pure-Python tiling window manager.
+
+		Features
+		========
+
+			* Simple, small and extensible. It's easy to write your own layouts, widgets and commands.
+			* Configured in Python.
+			* Command shell that allow all aspects of Qtile to be managed and inspected.
+			* Complete remote scriptability - write scripts to set up workspaces, manipulate windows, update status bar widgets and more.
+			* Qtile's remote scriptability makes it one fo the most thoroughly unit-tested window managers around.
+	</longdescription>
+	<upstream>
+		<changelog>https://raw.githubusercontent.com/qtile/qtile/master/CHANGELOG</changelog>
+		<bugs-to>https://github.com/qtile/qtile/issues</bugs-to>
+	</upstream>
 </pkgmetadata>

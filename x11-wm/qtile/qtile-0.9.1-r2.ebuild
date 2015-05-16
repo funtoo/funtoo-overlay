@@ -9,7 +9,7 @@ inherit distutils
 SRC_URI="https://github.com/qtile/qtile/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 KEYWORDS="~*"
 
-DESCRIPTION="A full-featured, hackable tiling window manager written and configured in Python"
+DESCRIPTION="A pure-Python tiling window manager."
 HOMEPAGE="http://www.qtile.org/"
 
 LICENSE="MIT"
@@ -19,32 +19,30 @@ IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget
 REQUIRED_USE="widget-mpris? ( dbus )"
 
 RDEPEND="x11-libs/pango
-	>=dev-python/cairocffi-0.6[${PYTHON_USEDEP}]
-	>=dev-python/cffi-0.8.2[${PYTHON_USEDEP}]
-	>=dev-python/six-1.4.1[${PYTHON_USEDEP}]
-	>=dev-python/xcffib-0.1.11[${PYTHON_USEDEP}]
-	dev-python/trollius[${PYTHON_USEDEP}]
+	$(python_abi_depend ">=dev-python/cairocffi-0.6" )
+	$(python_abi_depend ">=dev-python/cffi-0.8.2" )
+	$(python_abi_depend ">=dev-python/six-1.4.1" )
+	$(python_abi_depend ">=dev-python/xcffib-0.1.11" )
+	$(python_abi_depend "dev-python/trollius" )
 	dbus? (
-		dev-python/dbus-python[${PYTHON_USEDEP}]
-		>=dev-python/pygobject-3.4.2-r1000[${PYTHON_USEDEP}]
+		$(python_abi_depend "dev-python/dbus-python" )
+		$(python_abi_depend ">=dev-python/pygobject-3.4.2-r1000" )
 	)
 	widget-google-calendar? (
-		dev-python/httplib2[${PYTHON_USEDEP}]
-		dev-python/python-dateutil[${PYTHON_USEDEP}]
-		dev-python/google-api-python-client[${PYTHON_USEDEP}]
-		dev-python/oauth2client[${PYTHON_USEDEP}]
+		$(python_abi_depend "dev-python/httplib2" )
+		$(python_abi_depend "dev-python/python-dateutil" )
+		$(python_abi_depend "dev-python/google-api-python-client" )
+		$(python_abi_depend "dev-python/oauth2client" )
 	)
-	widget-imap? ( dev-python/keyring[${PYTHON_USEDEP}] )
-	widget-launchbar? ( dev-python/pyxdg[${PYTHON_USEDEP}] )
-	widget-mpd? ( dev-python/python-mpd[${PYTHON_USEDEP}] )
-	widget-wlan? ( net-wireless/python-wifi[${PYTHON_USEDEP}] )
+	widget-imap? ($(python_abi_depend "dev-python/keyring" ))
+	widget-launchbar? ($(python_abi_depend "dev-python/pyxdg" ))
+	widget-mpd? ($(python_abi_depend "dev-python/python-mpd" ))
+	widget-wlan? ($(python_abi_depend "net-wireless/python-wifi" ))
 "
 DEPEND="${RDEPEND}
-	dev-python/setuptools[${PYTHON_USEDEP}]
+	$(python_abi_depend "dev-python/setuptools" )
 "
 DOCS=( CHANGELOG README.rst )
-
-DISTUTILS_SINGLE_IMPL=true
 
 python_install_all() {
 	distutils-r1_python_install_all
