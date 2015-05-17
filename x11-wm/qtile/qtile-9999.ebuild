@@ -1,42 +1,52 @@
-# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-wm/qtile/qtile-9999.ebuild,v 1.13 2015/02/26 01:17:14 radhermit Exp $
 
-EAPI=5
-PYTHON_COMPAT=( python{2_7,3_4} )
+EAPI=5-progress
 
-inherit distutils-r1 virtualx
+PYTHON_ABI_TYPE="multiple"
+PYTHON_RESTRICTED_ABIS="2.6 3.2 3.1 3.5 *-jython *-pypy-*"
 
-if [[ ${PV} == 9999* ]] ; then
-	EGIT_REPO_URI="https://github.com/qtile/qtile.git"
-	inherit git-r3
-else
-	SRC_URI="https://github.com/qtile/qtile/archive/v${PV}.tar.gz -> ${P}.tar.gz"
-	KEYWORDS="~amd64 ~x86"
-fi
+inherit distutils virtualx git-2
 
-DESCRIPTION="A full-featured, hackable tiling window manager written in Python"
-HOMEPAGE="http://qtile.org/"
+SRC_URI=""
+EGIT_REPO_URI="https://github.com/qtile/qtile.git"
+
+DESCRIPTION="A pure-Python tiling window manager."
+HOMEPAGE="http://www.qtile.org/"
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="test"
-# docs require sphinxcontrib-blockdiag and sphinxcontrib-seqdiag
+IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget-mpris widget-wlan test"
 
-RDEPEND="x11-libs/pango
-	>=dev-python/cairocffi-0.6[${PYTHON_USEDEP}]
-	>=dev-python/cffi-0.8.2[${PYTHON_USEDEP}]
-	>=dev-python/six-1.4.1[${PYTHON_USEDEP}]
-	>=dev-python/xcffib-0.1.11[${PYTHON_USEDEP}]
-	$(python_gen_cond_dep 'dev-python/trollius[${PYTHON_USEDEP}]' 'python2*')
+REQUIRED_USE="widget-mpris? ( dbus )
+	widget-google-calendar? ( python_abis_2.7 )
+	widget-wlan? ( python_abis_2.7 )
+"
+
+RDEPEND="x11-libs/cairo[xcb] x11-libs/pango
+	>=dev-python/xcffib-0.1.11
+	>=dev-python/cairocffi-0.6
+	python_abis_3.3? ( dev-python/asyncio )
+	python_abis_2.7? ( dev-python/trollius[python_targets_python2_7] )
+	$(python_abi_depend ">=dev-python/six-1.4.1" )
+	dbus? ( $(python_abi_depend dev-python/dbus-python ">=dev-python/pygobject-3.4.2-r1000" ) )
+	widget-google-calendar? (
+		$(python_abi_depend dev-python/httplib2 dev-python/python-dateutil )
+		dev-python/oauth2client
+		dev-python/google-api-python-client
+	)
+	widget-imap? ( dev-python/keyring )
+	widget-launchbar? ( $(python_abi_depend dev-python/pyxdg ) )
+	widget-mpd? ( dev-python/python-mpd )
+	widget-wlan? ( net-wireless/python-wifi )
 "
 DEPEND="${RDEPEND}
-	dev-python/setuptools[${PYTHON_USEDEP}]
+	$(python_abi_depend dev-python/setuptools )
 	test? (
-		dev-python/nose[${PYTHON_USEDEP}]
+		$(python_abi_depend dev-python/nose)
 		x11-base/xorg-server[kdrive]
 	)
 "
+DOCS=( CHANGELOG README.rst )
 
 RESTRICT="test"
 
@@ -44,9 +54,49 @@ python_test() {
 	VIRTUALX_COMMAND="nosetests" virtualmake
 }
 
-python_install_all() {
-	local DOCS=( CHANGELOG README.rst )
-	distutils-r1_python_install_all
+src_prepare() {
+	if ! use widget-google-calendar ; then
+		(
+			sed -i '/safe_import(".google_calendar", "GoogleCalendar")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/google_calendar.py*
+		)
+	fi
+	if ! use widget-imap ; then
+		(
+			sed -i '/safe_import(".imapwidget", "ImapWidget")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/imapwidget.py*
+		)
+	fi
+	if ! use widget-launchbar ; then
+		(
+			sed -i '/safe_import(".launchbar", "LaunchBar")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/launchbar.py*
+		)
+	fi
+	if ! use widget-mpd ; then
+		(
+			sed -i '/safe_import(".mpdwidget", "Mpd")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/mpdwidget.py*
+		)
+	fi
+	if ! use widget-wlan ; then
+		(
+			sed -i '/safe_import(".wlan", "Wlan")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/wlan.py*
+		)
+	fi
+	if ! use widget-mpris ; then
+		(
+			sed -i '/safe_import(".mpriswidget", "Mpris")/d' libqtile/widget/__init__.py
+			sed -i '/safe_import(".mpris2widget", "Mpris2")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/mpriswidget.py*
+			rm libqtile/widget/mpris2widget.py*
+		)
+	fi
+}
+
+src_install() {
+	distutils_src_install
 
 	insinto /usr/share/xsessions
 	doins resources/qtile.desktop
