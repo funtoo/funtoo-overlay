@@ -22,4 +22,12 @@
 		<changelog>https://raw.githubusercontent.com/qtile/qtile/master/CHANGELOG</changelog>
 		<bugs-to>https://github.com/qtile/qtile/issues</bugs-to>
 	</upstream>
+	<use>
+		<flag name="widget-google-calendar">Add support for GoogleCalendar widget (requires additonal dependencies). Will only work with Python 2.7 ABI.</flag>
+		<flag name="widget-imap">Add support for ImapWidget widget (requires additonal dependencies).</flag>
+		<flag name="widget-launchbar">Add support for LaunchBar widget (requires additional dependencies).</flag>
+		<flag name="widget-mpd">Add support for Mpd widget (requires additional dependencies).</flag>
+		<flag name="widget-mpris">Add support for Mpris and Mpris2 widgets (requires dbus support).</flag>
+		<flag name="widget-wlan">Add support for Wlan widget (requires additional dependencies). Will only work with Python 2.7 ABI.</flag>
+	</use>
 </pkgmetadata>
