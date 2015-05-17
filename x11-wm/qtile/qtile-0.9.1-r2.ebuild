@@ -22,45 +22,21 @@ REQUIRED_USE="widget-mpris? ( dbus )
 "
 
 RDEPEND="x11-libs/cairo[xcb] x11-libs/pango
-	python_abis_3.4? (
-		>=dev-python/xcffib-0.1.11[python_targets_python3_4]
-		>=dev-python/cairocffi-0.6[python_targets_python3_4]
-	)
-	python_abis_3.3? (
-		>=dev-python/xcffib-0.1.11[python_targets_python3_3] )
-		>=dev-python/cairocffi-0.6[python_targets_python3_3] )
-		dev-python/asyncio[python_targets_python3_3] )
-	)
-	python_abis_2.7? (
-		>=dev-python/xcffib-0.1.11[python_targets_python2_7] )
-		>=dev-python/cairocffi-0.6[python_targets_python2_7] )
-		dev-python/trollius[python_targets_python2_7] )
-	)
+	>=dev-python/xcffib-0.1.11
+	>=dev-python/cairocffi-0.6
+	python_abis_3.3? ( dev-python/asyncio )
+	python_abis_2.7? ( dev-python/trollius[python_targets_python2_7] )
 	$(python_abi_depend >=dev-python/six-1.4.1 )
 	dbus? ( $(python_abi_depend dev-python/dbus-python >=dev-python/pygobject-3.4.2-r1000) )
 	widget-google-calendar? (
 		$(python_abi_depend dev-python/httplib2 dev-python/python-dateutil)
-		python_abis_3.4? ( dev-python/oauth2client[python_targets_python3_4] )
-		python_abis_3.3? ( dev-python/oauth2client[python_targets_python3_3] )
-		python_abis_2.7? (
-			dev-python/oauth2client[python_targets_python2_7]
-			dev-python/google-api-python-client[python_targets_python2_7]
-		)
+		dev-python/oauth2client
+		dev-python/google-api-python-client
 	)
-	widget-imap? (
-		python_abis_3.4? ( dev-python/keyring[python_targets_python3_4] )
-		python_abis_3.3? ( dev-python/keyring[python_targets_python3_3] )
-		python_abis_2.7? ( dev-python/keyring[python_targets_python2_7] )
-	)
+	widget-imap? ( dev-python/keyring )
 	widget-launchbar? ( $(python_abi_depend dev-python/pyxdg ) )
-	widget-mpd? (
-		python_abis_3.4? ( dev-python/python-mpd[python_targets_python3_4] )
-		python_abis_3.3? ( dev-python/python-mpd[python_targets_python3_3] )
-		python_abis_2.7? ( dev-python/python-mpd[python_targets_python2_7] )
-	)
-	widget-wlan? (
-		python_abis_2.7? ( net-wireless/python-wifi[python_targets_python2_7] )
-	)
+	widget-mpd? ( dev-python/python-mpd )
+	widget-wlan? ( net-wireless/python-wifi )
 "
 DEPEND="${RDEPEND}
 	$(python_abi_depend "dev-python/setuptools" )
