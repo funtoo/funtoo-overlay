@@ -29,5 +29,6 @@
 		<flag name="widget-mpd">Add support for Mpd widget (requires additional dependencies).</flag>
 		<flag name="widget-mpris">Add support for Mpris and Mpris2 widgets (requires dbus support).</flag>
 		<flag name="widget-wlan">Add support for Wlan widget (requires additional dependencies). Will only work with Python 2.7 ABI.</flag>
+		<flag name="widget-keyboardkbdd">Add support for KeyboardKbdd widget (requires dbus support).</flag>
 	</use>
 </pkgmetadata>

@@ -55,6 +55,11 @@ python_test() {
 }
 
 src_prepare() {
+	if ! use dbus ; then
+		(
+			sed -i '/self.setup_python_dbus()/d' libqtile/manager.py
+		)
+	fi
 	if ! use widget-google-calendar ; then
 		(
 			sed -i '/safe_import(".google_calendar", "GoogleCalendar")/d' libqtile/widget/__init__.py

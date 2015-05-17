@@ -16,9 +16,10 @@ HOMEPAGE="http://www.qtile.org/"
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget-mpris widget-wlan test"
+IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget-mpris widget-wlan widget-keyboardkbdd test"
 
 REQUIRED_USE="widget-mpris? ( dbus )
+	widget-keyboardkbdd? ( dbus )
 	widget-google-calendar? ( python_abis_2.7 )
 	widget-wlan? ( python_abis_2.7 )
 "
@@ -56,42 +57,53 @@ python_test() {
 }
 
 src_prepare() {
+	if ! use dbus ; then
+		(
+			sed -i '/self.setup_python_dbus()/d' libqtile/manager.py
+		)
+	fi
 	if ! use widget-google-calendar ; then
 		(
 			sed -i '/safe_import(".google_calendar", "GoogleCalendar")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/google_calendar.py*
+			rm libqtile/widget/google_calendar.py
 		)
 	fi
 	if ! use widget-imap ; then
 		(
 			sed -i '/safe_import(".imapwidget", "ImapWidget")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/imapwidget.py*
+			rm libqtile/widget/imapwidget.py
 		)
 	fi
 	if ! use widget-launchbar ; then
 		(
 			sed -i '/safe_import(".launchbar", "LaunchBar")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/launchbar.py*
+			rm libqtile/widget/launchbar.py
 		)
 	fi
 	if ! use widget-mpd ; then
 		(
 			sed -i '/safe_import(".mpdwidget", "Mpd")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/mpdwidget.py*
+			rm libqtile/widget/mpdwidget.py
 		)
 	fi
 	if ! use widget-wlan ; then
 		(
 			sed -i '/safe_import(".wlan", "Wlan")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/wlan.py*
+			rm libqtile/widget/wlan.py
 		)
 	fi
 	if ! use widget-mpris ; then
 		(
 			sed -i '/safe_import(".mpriswidget", "Mpris")/d' libqtile/widget/__init__.py
 			sed -i '/safe_import(".mpris2widget", "Mpris2")/d' libqtile/widget/__init__.py
-			rm libqtile/widget/mpriswidget.py*
-			rm libqtile/widget/mpris2widget.py*
+			rm libqtile/widget/mpriswidget.py
+			rm libqtile/widget/mpris2widget.py
+		)
+	fi
+	if ! use widget-keyboardkbdd ; then
+		(
+			sed -i '/safe_import(".keyboarkbdd", "KeyboardKbdd")/d' libqtile/widget/__init__.py
+			rm libqtile/widget/keyboardkbdd.py
 		)
 	fi
 }
