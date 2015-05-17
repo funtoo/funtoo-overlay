@@ -9,6 +9,7 @@ inherit distutils virtualx git-2
 
 SRC_URI=""
 EGIT_REPO_URI="https://github.com/qtile/qtile.git"
+KEYWORDS="*"
 
 DESCRIPTION="A pure-Python tiling window manager."
 HOMEPAGE="http://www.qtile.org/"
