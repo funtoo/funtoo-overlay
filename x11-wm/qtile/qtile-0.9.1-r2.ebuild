@@ -106,9 +106,9 @@ src_install() {
 }
 
 pkg_postinst() {
-	ewarn "If you are upgrading qtile and you use one of the following widgets:"
+	ewarn "If you are upgrading qtile and use one of the following widgets:"
 	ewarn "GoogleCalendar, ImapWidget, LaunchBar, Mpd, Mpris, Mpris2 or Wlan,"
-	ewarn "please make sure you have seletected the matching 'widget-*' useflag."
+	ewarn "please make sure you have set the matching 'widget-*' useflag."
 	ewarn "These useflags were added to include additional dependencies they require."
 	ewarn "If you don't set these useflags, matching widgets are wiped off to avoid"
 	ewarn "qtile warnings."
