@@ -47,7 +47,7 @@ DEPEND="${RDEPEND}
 "
 
 DOCS=( AUTHORS ChangeLog )
-PATCHES=( "${FILESDIR}/${PN}-2.0.7-cfitsio-includes.patch" )
+PATCHES=( "${FILESDIR}/${PN}-2.0.8-cfitsio-includes.patch" )
 
 src_configure() {
 	local mycmakeargs=(
