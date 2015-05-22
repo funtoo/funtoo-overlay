@@ -1,6 +1,6 @@
 # Keep the most recent masks in a reverse chrono order
 # newest on top
-
+=dev-util/pkgconf-0.9.11
 =sys-cluster/vzctl-4.9.2*
 =sys-cluster/ploop-1.13.2*
 
