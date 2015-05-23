@@ -1,0 +1,24 @@
+diff -rupN Kst-2.0.8/old_datasources/lfiio/lfiio.h new/old_datasources/lfiio/lfiio.h
+--- Kst-2.0.8/old_datasources/lfiio/lfiio.h	2014-02-13 03:41:44.000000000 -0600
++++ new/old_datasources/lfiio/lfiio.h	2015-05-21 15:06:35.971849410 -0500
+@@ -18,7 +18,7 @@
+ 
+ #include <datasource.h>
+ #include <dataplugin.h>
+-#include <libcfitsio0/fitsio.h>
++#include <fitsio.h>
+ 
+ class LFIIOSource : public Kst::DataSource {
+   Q_OBJECT
+diff -rupN Kst-2.0.8/old_datasources/plankIDEF/planckIDEF.h new/old_datasources/plankIDEF/planckIDEF.h
+--- Kst-2.0.8/old_datasources/plankIDEF/planckIDEF.h	2014-02-13 03:41:44.000000000 -0600
++++ new/old_datasources/plankIDEF/planckIDEF.h	2015-05-21 15:06:35.971849410 -0500
+@@ -16,7 +16,7 @@
+ 
+ #include <datasource.h>
+ #include <dataplugin.h>
+-#include <libcfitsio0/fitsio.h>
++#include <fitsio.h>
+ 
+ typedef struct {
+   QString file;
