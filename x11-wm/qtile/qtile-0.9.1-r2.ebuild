@@ -107,4 +107,5 @@ pkg_postinst() {
 	ewarn "These useflags were added to include additional dependencies they require."
 	ewarn "If you don't set these useflags, matching widgets are wiped off to avoid"
 	ewarn "qtile warnings."
+	ewarn "See http://www.funtoo.org/Package:Qtile for details."
 }
