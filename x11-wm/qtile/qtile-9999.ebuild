@@ -5,7 +5,7 @@ EAPI=5-progress
 PYTHON_ABI_TYPE="multiple"
 PYTHON_RESTRICTED_ABIS="2.6 3.2 3.1 3.5 *-jython *-pypy-*"
 
-inherit distutils virtualx git-2
+inherit distutils git-2
 
 SRC_URI=""
 EGIT_REPO_URI="https://github.com/qtile/qtile.git"
@@ -16,7 +16,7 @@ HOMEPAGE="http://www.qtile.org/"
 
 LICENSE="MIT"
 SLOT="0"
-IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget-mpris widget-wlan widget-keyboardkbdd test"
+IUSE="dbus widget-google-calendar widget-imap widget-launchbar widget-mpd widget-mpris widget-wlan widget-keyboardkbdd"
 
 REQUIRED_USE="widget-mpris? ( dbus )
 	widget-keyboardkbdd? ( dbus )
@@ -43,18 +43,8 @@ RDEPEND="x11-libs/cairo[xcb] x11-libs/pango
 "
 DEPEND="${RDEPEND}
 	$(python_abi_depend dev-python/setuptools )
-	test? (
-		$(python_abi_depend dev-python/nose)
-		x11-base/xorg-server[kdrive]
-	)
 "
 DOCS=( CHANGELOG README.rst )
-
-RESTRICT="test"
-
-python_test() {
-	VIRTUALX_COMMAND="nosetests" virtualmake
-}
 
 src_prepare() {
 	if ! use dbus ; then
