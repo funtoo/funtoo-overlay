@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<herd>funtoo</herd>
+	<maintainer>
+		<email>drobbins@funtoo.org</email>
+		<name>Daniel Robbins</name>
+	</maintainer>
+	<longdescription lang="en">
+		Funto's configuration tool: ego, epro.
+	</longdescription>
+	<upstream>
+		<changelog>https://github.com/apinsard/ego/releases</changelog>
+		<bugs-to>https://bugs.funtoo.org/</bugs-to>
+	</upstream>
+	<use>
+		<flag name="zsh-completion">Enable ZSH completion</flag>
+	</use>
+</pkgmetadata>
