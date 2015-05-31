@@ -421,9 +421,9 @@ src_prepare() {
 		-i "${S}/auto/install" || die
 
 	# Don't install to /etc/nginx/ if not in use
-	local m
-	for m in fastcgi scgi uwsgi ; do
-		if ! use nginx_modules_http_${m} ; then
+	local module
+	for module in fastcgi scgi uwsgi ; do
+		if ! use nginx_modules_http_${module} ; then
 			sed -e "/${module}/d" \
 				-i "${S}/auto/install" || die
 		fi
