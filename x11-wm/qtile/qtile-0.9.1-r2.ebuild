@@ -24,6 +24,7 @@ REQUIRED_USE="widget-mpris? ( dbus )
 
 RDEPEND="x11-libs/cairo[xcb] x11-libs/pango
 	>=dev-python/xcffib-0.1.11
+	<dev-python/xcffib-0.3.0
 	>=dev-python/cairocffi-0.6
 	python_abis_3.3? ( dev-python/asyncio )
 	python_abis_2.7? ( dev-python/trollius[python_targets_python2_7] )
