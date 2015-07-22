@@ -19,7 +19,7 @@
    require 'rbconfig'
    require 'fileutils'
    include RbConfig
-@@ -415,18 +415,17 @@
+@@ -415,20 +415,19 @@
    psg_nodelibdir = "#{fs_datadir}/#{GLOBAL_NAMESPACE_DIRNAME}/node"
    psg_libdir     = "#{fs_libdir}/#{GLOBAL_NAMESPACE_DIRNAME}"
    psg_native_support_dir = ENV["RUBYARCHDIR"] || "#{fs_libdir}/ruby/#{CONFIG['ruby_version']}/#{CONFIG['arch']}"
@@ -38,6 +38,8 @@
 -  psg_nginx_module_source_dir   = "#{fs_datadir}/#{GLOBAL_NAMESPACE_DIRNAME}/ngx_http_passenger_module"
 +  psg_ruby_extension_source_dir = "#{fs_prefix}/src/#{GLOBAL_NAMESPACE_DIRNAME}/ruby_extension_source"
 +  psg_nginx_module_source_dir   = "#{fs_prefix}/src/#{GLOBAL_NAMESPACE_DIRNAME}/ngx_http_passenger_module"
+   psg_ruby       = ENV['RUBY'] || "#{fs_bindir}/ruby"
+   psg_free_ruby  = ENV['FREE_RUBY'] || "/usr/bin/env ruby"
  
 -  fakeroot = "pkg/fakeroot"
 +  fakeroot = ENV['D']

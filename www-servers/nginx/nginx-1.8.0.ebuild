@@ -74,7 +74,7 @@ mod_doc["upload_progress"]="README CHANGES"
 # Headers More (http://github.com/agentzh/headers-more-nginx-module)
 mod_a["headers_more"]="agentzh"
 mod_pn["headers_more"]="headers-more-nginx-module"
-mod_pv["headers_more"]="0.26"
+mod_pv["headers_more"]="0.261"
 mod_lic["headers_more"]="BSD"
 mod_p["headers_more"]="${mod_pn["headers_more"]}-${mod_pv["headers_more"]}"
 mod_uri["headers_more"]="https://github.com/${mod_a["headers_more"]}/${mod_pn["headers_more"]}/archive/v${mod_pv["headers_more"]}.tar.gz"

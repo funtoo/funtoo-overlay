@@ -10,8 +10,7 @@ DESCRIPTION="X.Org X servers"
 SLOT="0/${PV}"
 KEYWORDS="*"
 
-IUSE_SERVERS="dmx kdrive xnest xorg xvfb"
-IUSE="${IUSE_SERVERS} ipv6 minimal nptl selinux +suid tslib +udev unwind"
+IUSE="dmx kdrive xnest +xorg xvfb ipv6 minimal nptl selinux +suid tslib +udev unwind"
 
 RDEPEND=">=app-eselect/eselect-opengl-1.0.8
 	dev-libs/openssl
@@ -104,7 +103,7 @@ PDEPEND="
 	xorg? ( >=x11-base/xorg-drivers-$(get_version_component_range 1-2) )"
 
 REQUIRED_USE="!minimal? (
-		|| ( ${IUSE_SERVERS} )
+		|| ( dmx kdrive xnest xorg xvfb )
 	)"
 
 #UPSTREAMED_PATCHES=(

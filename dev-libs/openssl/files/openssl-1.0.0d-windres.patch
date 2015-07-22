@@ -1,4 +1,4 @@
-URL: http://rt.openssl.org/Ticket/Display.html?id=2558
+URL: http://rt.openssl.org/Ticket/Display.html?id=2558&user=guest&pass=guest
 Subject: make windres controllable via build env var settings
 
 atm, the windres code in openssl is only usable via the cross-compile prefix 

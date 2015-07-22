@@ -1,8 +1,8 @@
-# FL-2555, FL-2541, FL-2491, masked version of networkmanager with DNS/resolv.conf fix attempt
-=net-misc/networkmanager-1.0.2-r1
+# FL-2401: pulseaudio-6 update. Masked for testing
+=media-sound/pulseaudio-6.0
 
-# FL-2568: new system-config-printer. Convert to progress, python-3 only
-=app-admin/system-config-printer-1.5.7
+# FL-2555, FL-2541, FL-2491, masked version of networkmanager with DNS/resolv.conf fix attempt
+>net-misc/networkmanager-1.0.2
 
 # mask back autogen-5.18.5. failure at xml2ag compilation. Reported upstream
 =sys-devel/autogen-5.18.5

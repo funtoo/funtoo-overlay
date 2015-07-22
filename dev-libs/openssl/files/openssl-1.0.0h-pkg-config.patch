@@ -1,3 +1,5 @@
+https://rt.openssl.org/Ticket/Display.html?id=3332&user=guest&pass=guest
+
 depend on other pc files rather than encoding library info directly in
 every pkg-config file
 

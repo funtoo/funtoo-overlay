@@ -18,7 +18,7 @@ HOMEPAGE="https://wiki.gnome.org/Projects/NetworkManager"
 LICENSE="GPL-2+"
 SLOT="0" # add subslot if libnm-util.so.2 or libnm-glib.so.4 bumps soname version
 
-IUSE="bluetooth connection-sharing consolekit dhclient dhcpcd gnutls introspection \
+IUSE="bluetooth connection-sharing consolekit dhclient gnutls introspection \
 kernel_linux +nss modemmanager ncurses policykit +ppp resolvconf selinux teamd test \
 vala wext +wifi zeroconf" # wimax
 
@@ -64,7 +64,6 @@ COMMON_DEPEND="
 	ncurses? ( >=dev-libs/newt-0.52.15 )
 	nss? ( >=dev-libs/nss-3.11:= )
 	dhclient? ( >=net-misc/dhcp-4[client] )
-	dhcpcd? ( >=net-misc/dhcpcd-4.0.0_rc3 )
 	introspection? ( >=dev-libs/gobject-introspection-0.10.3 )
 	policykit? ( >=sys-auth/polkit-0.106 )
 	ppp? ( >=net-dialup/ppp-2.4.5:=[ipv6] )
@@ -170,6 +169,7 @@ src_configure() {
 		--disable-lto \
 		--disable-config-plugin-ibft \
 		--disable-ifnet \
+		--without-dhcpcd \
 		--without-netconfig \
 		--without-systemd \
 		--with-dbus-sys-dir=/etc/dbus-1/system.d \
@@ -186,7 +186,6 @@ src_configure() {
 		$(use_enable ppp) \
 		--disable-wimax \
 		$(use_with dhclient) \
-		$(use_with dhcpcd) \
 		$(use_with modemmanager modem-manager-1) \
 		$(use_with ncurses nmtui) \
 		$(use_with resolvconf) \

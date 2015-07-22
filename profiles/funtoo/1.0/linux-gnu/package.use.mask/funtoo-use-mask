@@ -1,3 +1,7 @@
+# Oleg Vinichenko (9.7.15)
+# mask ruby USE flag for gdal. Broken
+sci-libs/gdal ruby
+
 # Oleg Vinichenko (10.3.15)
 # mask rdp USE for vlc until freerdp get better shape:
 media-video/vlc rdp

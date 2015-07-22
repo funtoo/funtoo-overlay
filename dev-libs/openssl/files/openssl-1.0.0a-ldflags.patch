@@ -1,4 +1,10 @@
+http://bugs.gentoo.org/181438
 http://bugs.gentoo.org/327421
+https://rt.openssl.org/Ticket/Display.html?id=3331&user=guest&pass=guest
+
+make sure we respect LDFLAGS
+
+also make sure we don't add useless -rpath flags to the system libdir
 
 --- Makefile.org
 +++ Makefile.org
