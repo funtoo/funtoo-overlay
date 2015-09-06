@@ -118,8 +118,8 @@ RDEPEND="
 				>=dev-libs/libelf-0.8.13-r2:=[${MULTILIB_USEDEP}]
 				) )
 		)
-		>=sys-devel/llvm-3.3-r3:=[${MULTILIB_USEDEP}]
-		video_cards_radeonsi? ( >=sys-devel/llvm-3.4.2:=[${MULTILIB_USEDEP}] )
+		<sys-devel/llvm-3.7:=[${MULTILIB_USEDEP}]
+		video_cards_radeonsi? ( <sys-devel/llvm-3.7:=[${MULTILIB_USEDEP}] )
 	)
 	opencl? (
 				app-eselect/eselect-opencl
@@ -150,7 +150,7 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.4.2:=[${MULTILIB_USEDEP}]
+				<sys-devel/llvm-3.7:=[${MULTILIB_USEDEP}]
 				>=sys-devel/clang-3.4.2:=[${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)

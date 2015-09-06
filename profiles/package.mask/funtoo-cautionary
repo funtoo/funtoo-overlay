@@ -1,3 +1,7 @@
+# FL-2770: breaks mesa 10.5.2 - will be okay circa mesa 11
+>=sys-devel/llvm-3.7
+>=sys-devel/clang-3.7
+
 # FL-2748: 6.0-r1 breaks metro builds due to breakage when built with high parallelism.
 >=sys-libs/ncurses-6
 # this has the slotmove to 5
