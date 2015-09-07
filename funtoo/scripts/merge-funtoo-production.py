@@ -12,7 +12,8 @@ print(head)
 success = False
 if qa_build(host,"funtoo-current-next",arch_desc,subarch,head,"freshen"):
 	if qa_build(host,"funtoo-stable-next",arch_desc,subarch,head,"freshen"):
-		success = True
+		if qa_build(host,"funtoo-current-hardened",arch_desc,subarch,head,"freshen"):
+			success = True
 if not success:
 	print("QA builds were not successful.")
 	sys.exit(1)
@@ -27,3 +28,5 @@ my_steps = [
 
 ports_2012.run(my_steps)
 ports_2012.gitCommit(message="merged from funtoo-staging", branch="funtoo.org")
+
+# vim: ts=4 sw=4 noet
