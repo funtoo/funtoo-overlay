@@ -245,10 +245,11 @@ PATCHES=(
 
 	# from master branch
 	"${FILESDIR}/${PN}-4.4.0.3-telepathy-build-fix.patch"
-	"${FILESDIR}/${PN}-4.4.1.2-improve-KDE4FilePicker.patch"
+	"${FILESDIR}/${PN}-4.4.1.2-add-kde4-open-url-script.patch"
 	"${FILESDIR}/${PN}-4.3.5.2-remove-bashisms.patch" # bug 525454
 	"${FILESDIR}/${PN}-4.4.4.3-fix-KDE4-FileDialog.patch"
 	"${FILESDIR}/${PN}-4.4.4.3-cleanup-IsNativeControlSupported.patch"
+	"${FILESDIR}/${PN}-4.4.4.3-improve-KDE4FilePicker.patch"
 	"${FILESDIR}/${PN}-4.4.5.2-fix-KDE4-listbox-regression.patch"
 )
 
