@@ -8,12 +8,13 @@ MY_PV=$(get_version_component_range 1-3)
 
 DESCRIPTION="Translations for the Libreoffice suite"
 HOMEPAGE="http://www.libreoffice.org"
-BASE_SRC_URI="http://download.documentfoundation.org/${PN/-l10n/}/stable/${MY_PV}/rpm"
+BASE_SRC_URI="mirror://funtoo/libreoffice/l10n"
 
 LICENSE="|| ( LGPL-3 MPL-1.1 )"
 SLOT="0"
 KEYWORDS="*"
 IUSE="offlinehelp"
+RESTRICT="mirror"
 
 #
 # when changing the language lists, please be careful to preserve the spaces (bug 491728)
@@ -24,13 +25,13 @@ LANGUAGES="${LANGUAGES_HELP}af ar as be br brx cy dgo fa ga gd kk kmr_Latn kn ko
 for lang in ${LANGUAGES_HELP}; do
 	helppack=""
 	[[ ${lang} == en ]] && lang2=${lang/en/en_US} || lang2=${lang}
-	helppack="offlinehelp? ( ${BASE_SRC_URI}/x86/LibreOffice_${MY_PV}_Linux_x86_rpm_helppack_${lang2/_/-}.tar.gz )"
+	helppack="offlinehelp? ( ${BASE_SRC_URI}/LibreOffice_${MY_PV}_Linux_x86_rpm_helppack_${lang2/_/-}.tar.gz )"
 	SRC_URI+=" linguas_${lang}? ( ${helppack} )"
 done
 for lang in ${LANGUAGES}; do
 	langpack=""
 	[[ ${lang} == en ]] \
-		|| langpack="${BASE_SRC_URI}/x86/LibreOffice_${MY_PV}_Linux_x86_rpm_langpack_${lang/_/-}.tar.gz"
+		|| langpack="${BASE_SRC_URI}/LibreOffice_${MY_PV}_Linux_x86_rpm_langpack_${lang/_/-}.tar.gz"
 	[[ -z ${langpack} ]] || SRC_URI+=" linguas_${lang}? ( ${langpack} )"
 	IUSE+=" linguas_${lang}"
 done
