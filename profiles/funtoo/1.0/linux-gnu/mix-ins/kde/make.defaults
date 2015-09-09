@@ -1,1 +1,1 @@
-USE="introspection consolekit kde nls policykit semantic-desktop"
+USE="consolekit introspection kde nls policykit qt3support qt4 semantic-desktop"
