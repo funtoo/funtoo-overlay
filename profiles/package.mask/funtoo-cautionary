@@ -1,3 +1,6 @@
+# precautionary mask as newer versions appear to break GNOME 3
+>=sys-auth/consolekit-0.9.2-r4
+
 # FL-2770: breaks mesa 10.5.2 - will be okay circa mesa 11
 >=sys-devel/llvm-3.7
 >=sys-devel/clang-3.7
