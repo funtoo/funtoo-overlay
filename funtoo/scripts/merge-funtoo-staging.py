@@ -38,6 +38,7 @@ funtoo_overlays = {
 	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
 	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "master", "repos@localhost:gentoo-perl-shard.git", pull=True),
+	"gentoo-kde-shard" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
 }
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
@@ -50,11 +51,11 @@ other_overlays = {
 	"bliss_overlay" : GitTree("bliss-overlay", "master", "https://github.com/fearedbliss/bliss-overlay.git", pull=True),
 	"squeezebox_overlay" : GitTree("squeezebox", "master", "git://anongit.gentoo.org/user/squeezebox.git", pull=True),
 	"progress_overlay" : SvnTree("progress", "https://gentoo-progress.googlecode.com/svn/overlays/progress"),
-        "pantheon_overlay" : GitTree("pantheon", "master", "https://github.com/pimvullers/elementary.git", pull=True),
-        "pinsard_overlay" : GitTree("pinsard", "master", "https://github.com/apinsard/sapher-overlay.git", pull=True),
-        "sabayon_for_gentoo" : GitTree("sabayon-for-gentoo", "master", "git://github.com/Sabayon/for-gentoo.git", pull=True),
-        "tripsix_overlay" : GitTree("tripsix", "master", "https://github.com/666threesixes666/tripsix.git", pull=True),
-        "faustoo_overlay" : GitTree("faustoo", "master", "https://github.com/fmoro/faustoo.git", pull=True),
+	"pantheon_overlay" : GitTree("pantheon", "master", "https://github.com/pimvullers/elementary.git", pull=True),
+	"pinsard_overlay" : GitTree("pinsard", "master", "https://github.com/apinsard/sapher-overlay.git", pull=True),
+	"sabayon_for_gentoo" : GitTree("sabayon-for-gentoo", "master", "git://github.com/Sabayon/for-gentoo.git", pull=True),
+	"tripsix_overlay" : GitTree("tripsix", "master", "https://github.com/666threesixes666/tripsix.git", pull=True),
+	"faustoo_overlay" : GitTree("faustoo", "master", "https://github.com/fmoro/faustoo.git", pull=True),
 	"sera_overlay" : GitTree("sera", "master", "git://anongit.gentoo.org/dev/sera.git", pull=True),
 	"vmware_overlay" : GitTree("vmware", "master", "git://anongit.gentoo.org/proj/vmware.git", pull=True)
 }
@@ -98,7 +99,7 @@ else:
 
 base_steps = [
 	GitCheckout("master"),
-	SyncFromTree(gentoo_staging_r, exclude=["/metadata/cache/**", "ChangeLog", "dev-util/metro", "skel.ChangeLog"]),
+	SyncFromTree(gentoo_staging_r, exclude=["/metadata/cache/**", "ChangeLog", "dev-util/metro", "skel.ChangeLog", "dev-qt/**", "kde-apps/**", "kde-base/**", "kde-frameworks/**", "kde-misc/**", "kde-plasma/**"]),
 	SyncDir(funtoo_overlay.root,"licenses"),
 	SyncDir(funtoo_overlay.root,"metadata"),
 	SyncFiles(funtoo_overlay.root, {
@@ -165,6 +166,7 @@ ebuild_additions = [
 	InsertEbuilds(funtoo_overlays["funtoo_deadbeef"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_gambas"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_wmfs"], select="all", skip=None, replace=False),
+	InsertEbuilds(funtoo_overlays["gentoo-kde-shard"], select="all", skip=None, replace=False),
 ]
 
 # Ebuild modifications -- these changes need to be treated more carefully as ordering can be important
@@ -195,6 +197,7 @@ ebuild_modifications = [
 eclass_steps = [
 	SyncDir(funtoo_overlays["funtoo_deadbeef"].root,"eclass"),
 	SyncDir(funtoo_overlays["funtoo_gnome"].root,"eclass"),
+	SyncDir(funtoo_overlays["gentoo-kde-shard"].root,"eclass"),
 	SyncDir(other_overlays["progress_overlay"].root, "eclass"),
 	SyncDir(funtoo_overlay.root, "eclass"),
 ]

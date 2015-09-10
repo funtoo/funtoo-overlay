@@ -26,8 +26,7 @@ COMMON_DEPEND="!static? ( selinux? ( sys-libs/libselinux ) )
 DEPEND="${COMMON_DEPEND}
 	static? ( selinux? ( sys-libs/libselinux[static-libs(+)] ) )
 	>=sys-kernel/linux-headers-2.6.39"
-RDEPEND="${COMMON_DEPEND}
-mdev? ( !<sys-apps/openrc-0.13 )"
+RDEPEND="${COMMON_DEPEND}"
 
 S=${WORKDIR}/${MY_P}
 
