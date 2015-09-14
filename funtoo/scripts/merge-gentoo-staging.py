@@ -38,7 +38,7 @@ def gentoo_staging_update():
 		InsertEbuilds(gentoo_staging_w, select=re.compile("perl-core/.*"), skip=None, replace=True),
 		InsertEbuilds(gentoo_staging_w, select=[ "dev-lang/perl" ], skip=None, replace=True),
 		InsertEbuilds(gentoo_staging_w, select=re.compile("virtual/perl-.*"), skip=None, replace=True),
-		SyncFiles(gentoo_staging_w.root, { "eclass/perl-app.eclass" : "eclass/perl-app.eclass", "eclass/perl-module.eclass" : "eclass/perl-module.eclass" })
+		SyncFiles(gentoo_staging_w.root, { "eclass/perl-app.eclass" : "eclass/perl-app.eclass", "eclass/perl-module.eclass" : "eclass/perl-module.eclass", "dev-perl/metadata.xml" : "dev-perl/metadata.xml" })
 	]
 	python_shard_steps = [
 		GitCheckout("master"),
