@@ -1,21 +1,23 @@
 # Distributed under the terms of the GNU General Public License v2
-
 EAPI=5
 
 CMAKE_REMOVE_MODULES="no"
 inherit bash-completion-r1 elisp-common toolchain-funcs eutils versionator cmake-utils virtualx
 
+MY_P="${P/_/-}"
+
 DESCRIPTION="Cross platform Make"
 HOMEPAGE="http://www.cmake.org/"
-SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${P}.tar.gz"
+SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${MY_P}.tar.gz
+	http://www.cmake.org/gitweb?p=cmake.git;a=patch;h=b9ec9392da21a3421e48c6961976060d872faffb -> ${PN}-3.3.1-FindPkgConfig_remove_variable_dereference.patch"
 
 LICENSE="CMake"
 SLOT="0"
-KEYWORDS="*"
+KEYWORDS="~*"
 IUSE="doc emacs ncurses qt4 qt5"
 
 RDEPEND="
-	>=app-arch/libarchive-2.8.0:=
+	>=app-arch/libarchive-3.0.0:=
 	>=dev-libs/expat-2.0.1
 	>=net-misc/curl-7.20.0-r1[ssl]
 	sys-libs/zlib
@@ -36,6 +38,8 @@ DEPEND="${RDEPEND}
 	doc? ( dev-python/sphinx )
 "
 
+S="${WORKDIR}/${MY_P}"
+
 SITEFILE="50${PN}-gentoo.el"
 
 CMAKE_BINARY="${S}/Bootstrap.cmk/cmake"
@@ -55,6 +59,9 @@ PATCHES=(
 	# respect python eclasses
 	"${FILESDIR}"/${PN}-2.8.10.2-FindPythonLibs.patch
 	"${FILESDIR}"/${PN}-3.1.0-FindPythonInterp.patch
+
+	# upstream fixes (can usually be removed with a version bump)
+	"${DISTDIR}"/${PN}-3.3.1-FindPkgConfig_remove_variable_dereference.patch
 )
 
 cmake_src_bootstrap() {

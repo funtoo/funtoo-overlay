@@ -7,7 +7,8 @@ inherit bash-completion-r1 elisp-common toolchain-funcs eutils versionator cmake
 
 DESCRIPTION="Cross platform Make"
 HOMEPAGE="http://www.cmake.org/"
-SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${P}.tar.gz"
+SRC_URI="http://www.cmake.org/files/v$(get_version_component_range 1-2)/${P}.tar.gz
+	http://www.cmake.org/gitweb?p=cmake.git;a=patch;h=b9ec9392da21a3421e48c6961976060d872faffb -> ${PN}-3.3.1-FindPkgConfig_remove_variable_dereference.patch"
 
 LICENSE="CMake"
 SLOT="0"
@@ -15,7 +16,7 @@ KEYWORDS="*"
 IUSE="doc emacs ncurses qt4 qt5"
 
 RDEPEND="
-	>=app-arch/libarchive-2.8.0:=
+	>=app-arch/libarchive-3.0.0:=
 	>=dev-libs/expat-2.0.1
 	>=net-misc/curl-7.20.0-r1[ssl]
 	sys-libs/zlib
@@ -55,6 +56,10 @@ PATCHES=(
 	# respect python eclasses
 	"${FILESDIR}"/${PN}-2.8.10.2-FindPythonLibs.patch
 	"${FILESDIR}"/${PN}-3.1.0-FindPythonInterp.patch
+
+	# upstream backports
+	"${FILESDIR}"/${PN}-3.2.3-musl-missing-include.patch
+	"${DISTDIR}"/${PN}-3.3.1-FindPkgConfig_remove_variable_dereference.patch
 )
 
 cmake_src_bootstrap() {
