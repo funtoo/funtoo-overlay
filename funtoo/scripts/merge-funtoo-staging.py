@@ -4,6 +4,10 @@ import os
 import sys
 from merge_utils import *
 
+flags = {
+	"progress" : True
+}
+
 nopush=False
 
 funtoo_overlay = GitTree("funtoo-overlay", "master", "repos@localhost:funtoo-overlay.git", pull=True)
@@ -37,10 +41,12 @@ funtoo_overlays = {
 	"funtoo_deadbeef" : GitTree("funtoo-deadbeef", "master", "https://github.com/damex/funtoo-deadbeef.git", pull=True),
 	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
-	"progress_overlay" : GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True),
 	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "45cac7981765a849a9d23a4c25718ecd7ecf5068", "repos@localhost:gentoo-perl-shard.git", pull=True),
 	"gentoo-kde-shard" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
+	"gentoo-core-shard" : GitTree("gentoo-core-shard", "d97a7517cd5badf06446f20bc912ed23ff881a1d", "repos@localhost:gentoo-core-shard.git", pull=True),
 }
+if "progress" in flags:
+	funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
 # of these when we regenerate our tree.
@@ -83,11 +89,6 @@ else:
 
 pull = True
 
-# Progress overlay merge
-if not os.path.exists("/usr/bin/svn"):
-	print("svn binary not found at /usr/bin/svn. Exiting.")
-	sys.exit(1)
-
 if nopush:
 	push = False
 else:
@@ -97,6 +98,12 @@ else:
 # branch, copying almost the full entirety of Gentoo's portage tree to our destination tree, and copying over
 # funtoo overlay licenses, metadata, and also copying over GLSA's.
 
+cpkg_fn = os.path.dirname(os.path.abspath(__file__)) + "/core-packages"
+cpkg = open(cpkg_fn,"r")
+core_patterns = []
+for line in cpkg:
+	core_patterns.append(line.strip())
+
 base_steps = [
 	GitCheckout("master"),
 	SyncFromTree(gentoo_staging_r, exclude=[ 
@@ -104,16 +111,9 @@ base_steps = [
 		"ChangeLog",
 		"dev-util/metro",
 		"skel.ChangeLog",
-		"dev-qt/**",
-		"kde-apps/**",
-		"kde-base/**",
-		"kde-frameworks/**",
-		"kde-misc/**",
-		"kde-plasma/**",
-		"dev-perl/**",
-		"perl-core/**",
-		"dev-lang/perl",
 	]),
+	InsertEbuilds(funtoo_overlays["gentoo-core-shard"], select=core_patterns, skip=None, replace=True),
+	InsertEclasses(funtoo_overlays["gentoo-core-shard"], select=re.compile(".*\.eclass")),
 	SyncDir(funtoo_overlay.root,"licenses"),
 	SyncDir(funtoo_overlay.root,"metadata"),
 	SyncFiles(funtoo_overlay.root, {
@@ -149,13 +149,19 @@ profile_steps = [
 	}),
 	SyncFiles(funtoo_overlays["funtoo_wmfs"].root, {
 		"profiles/package.mask":"profiles/package.mask/wmfs-mask"
-	}),
-	SyncDir(funtoo_overlays["progress_overlay"].root, "profiles/unpack_dependencies"),
-	SyncFiles(funtoo_overlays["progress_overlay"].root, {
-		"profiles/package.mask":"profiles/package.mask/progress",
-		"profiles/use.aliases":"profiles/use.aliases/progress",
-		"profiles/use.mask":"profiles/use.mask/progress"
-	}),
+	}) ]
+
+if "progress" in flags:
+	profile_steps = profile_steps + [
+		SyncDir(funtoo_overlays["progress_overlay"].root, "profiles/unpack_dependencies"),
+		SyncFiles(funtoo_overlays["progress_overlay"].root, {
+			"profiles/package.mask":"profiles/package.mask/progress",
+			"profiles/use.aliases":"profiles/use.aliases/progress",
+			"profiles/use.mask":"profiles/use.mask/progress"
+		}),
+	]
+
+profile_steps = profile_steps + [
 	SyncFiles(funtoo_overlays["funtoo_gnome"].root, {
 		"profiles/package.mask":"profiles/funtoo/1.0/linux-gnu/mix-ins/gnome/package.mask"
 	}),
@@ -180,9 +186,7 @@ ebuild_additions = [
 	InsertEbuilds(funtoo_overlays["funtoo_deadbeef"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_gambas"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_wmfs"], select="all", skip=None, replace=False),
-	InsertEbuilds(funtoo_overlays["gentoo-kde-shard"], select="all", skip=None, replace=False),
-	InsertEbuilds(funtoo_overlays["gentoo-perl-shard"], select="all", skip=None, replace=False),
-]
+	]
 
 # Ebuild modifications -- these changes need to be treated more carefully as ordering can be important
 # for wholesale replacing as well as merging.
@@ -191,20 +195,28 @@ ebuild_additions = [
 ebuild_modifications = [
 	InsertEbuilds(other_overlays["vmware_overlay"], select=[ "app-emulation/vmware-modules" ], skip=None, replace=True, merge=True),
 	InsertEbuilds(other_overlays["sera_overlay"], select="all", skip=None, replace=True, merge=True),
-        InsertEbuilds(other_overlays["pantheon_overlay"], select=[ "x11-libs/granite", "x11-libs/bamf", "x11-themes/plank-theme-pantheon", "pantheon-base/plank", "x11-wm/gala"], skip=None, replace=True, merge=True),
+	InsertEbuilds(other_overlays["pantheon_overlay"], select=[ "x11-libs/granite", "x11-libs/bamf", "x11-themes/plank-theme-pantheon", "pantheon-base/plank", "x11-wm/gala"], skip=None, replace=True, merge=True),
 	InsertEbuilds(other_overlays["faustoo_overlay"], select=[ "app-office/projectlibre-bin" ], skip=None, replace=True),
 	InsertEbuilds(other_overlays["foo_overlay"], select="all", skip=["sys-fs/mdev-bb", "sys-fs/mdev-like-a-boss", "media-sound/deadbeef", "media-video/handbrake"], replace=["app-shells/rssh"]),
 	InsertEbuilds(funtoo_overlays["plex_overlay"], select=[ "media-tv/plex-media-server" ], skip=None, replace=True),
 	InsertEbuilds(other_overlays["causes_overlay"], select=[ "media-sound/renoise", "media-sound/renoise-demo", "sys-fs/smdev", "x11-wm/dwm" ], skip=None, replace=True),
 	InsertEbuilds(other_overlays["sabayon_for_gentoo"], select=["app-admin/equo", "app-admin/matter", "sys-apps/entropy", "sys-apps/entropy-server", "sys-apps/entropy-client-services","app-admin/rigo", "sys-apps/rigo-daemon", "sys-apps/magneto-core", "x11-misc/magneto-gtk", "x11-misc/magneto-gtk3", "x11-themes/numix-icon-theme", "kde-misc/magneto-kde", "app-misc/magneto-loader"], replace=True),
-        InsertEbuilds(other_overlays["tripsix_overlay"], select=["media-sound/rakarrack"], skip=None, replace=True, merge=False),
-        InsertEbuilds(other_overlays["pinsard_overlay"], select=["x11-wm/qtile"], skip=None, replace=True, merge=False),
-	InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False),
+	InsertEbuilds(other_overlays["tripsix_overlay"], select=["media-sound/rakarrack"], skip=None, replace=True, merge=False),
+	InsertEbuilds(other_overlays["pinsard_overlay"], select=["x11-wm/qtile"], skip=None, replace=True, merge=False),
+]
+
+if "progress" in flags:
+	ebuild_modifications = ebuild_modifications + [ InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False) ]
+
+ebuild_modifications = ebuild_modifications + [
 	InsertEbuilds(funtoo_overlays["funtoo_gnome"], select="all", skip=None, replace=True, merge=["dev-python/pyatspi", "dev-python/pygobject", "dev-util/gdbus-codegen", "x11-libs/vte"]),
 	InsertEbuilds(funtoo_overlays["funtoo_media"], select="all", skip=None, replace=True),
 	InsertEbuilds(funtoo_overlay, select="all", skip=None, replace=True),
 	InsertEbuilds(funtoo_overlays["funtoo_toolchain"], select="all", skip=None, replace=True, merge=False),
 	InsertEbuilds(funtoo_overlays["ldap_overlay"], select="all", skip=None, replace=True),
+	RemoveFiles(globs=get_pkglist("kde-packages")),
+	InsertEbuilds(funtoo_overlays["gentoo-kde-shard"], select="all", skip=None, replace=True),
+	InsertEbuilds(funtoo_overlays["gentoo-perl-shard"], select="all", skip=None, replace=True),
 ]
 
 # Steps related to eclass copying:
@@ -214,7 +226,12 @@ eclass_steps = [
 	SyncDir(funtoo_overlays["funtoo_gnome"].root,"eclass"),
 	SyncDir(funtoo_overlays["gentoo-kde-shard"].root,"eclass"),
 	SyncDir(funtoo_overlays["gentoo-perl-shard"].root,"eclass"),
-	SyncDir(funtoo_overlays["progress_overlay"].root, "eclass"),
+]
+
+if "progress" in flags:
+	eclass_steps += [ SyncDir(funtoo_overlays["progress_overlay"].root, "eclass") ]
+
+eclass_steps += [
 	SyncDir(funtoo_overlay.root, "eclass"),
 ]
 
@@ -224,7 +241,14 @@ eclass_steps = [
 
 treeprep_steps = [
 	SyncDir(funtoo_overlays["plex_overlay"].root,"licenses"),
-	MergeUpdates(funtoo_overlays["progress_overlay"].root),
+]
+
+if "progress" in flags:
+	treeprep_steps += [
+		MergeUpdates(funtoo_overlays["progress_overlay"].root),
+	]
+
+treeprep_steps += [
 	MergeUpdates(funtoo_overlay.root),
 	AutoGlobMask("dev-lang/python", "python*_pre*", "funtoo-python"),
 	ThirdPartyMirrors(),
@@ -248,3 +272,5 @@ if xmlfile:
 	a.close()
 print("merge-funtoo-staging.py completed successfully.")
 sys.exit(0)
+
+# vim: ts=4 sw=4 noet

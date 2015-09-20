@@ -14,6 +14,14 @@ debug = False
 
 mergeLog = open("/var/tmp/merge.log","w")
 
+def get_pkglist(fname):
+	cpkg_fn = os.path.dirname(os.path.abspath(__file__)) + "/" + fname
+	cpkg = open(cpkg_fn,"r")
+	patterns = []
+	for line in cpkg:
+		patterns.append(line.strip())
+	return patterns
+
 def qa_build(host,build,arch_desc,subarch,head,target):
 	success = False
 	print("Performing remote QA build on %s for %s %s %s %s (%s)" % (host, build, arch_desc, subarch, head, target))
@@ -167,6 +175,15 @@ class ApplyPatchSeries(MergeStep):
 				runShell( "( cd %s; %s/%s )" % ( tree.root, self.path, ls[1] ))
 			else:
 				runShell( "( cd %s; git apply %s/%s )" % ( tree.root, self.path, line[:-1] ))
+
+class RemoveFiles(MergeStep):
+	def __init__(self,globs=[])
+		self.flist = globs
+	
+	def run(self,tree):
+		for glob in self.globs:
+			cmd = "rm -rf %s/%s" % ( tree.root, glob )
+			runShell(cmd)
 
 class SyncDir(MergeStep):
 	def __init__(self,srcroot,srcdir=None,destdir=None,exclude=[],delete=False):
@@ -777,3 +794,4 @@ xorg_treelet = GitWriteTree(
 
 
 
+# vim: ts=4 sw=4 noet

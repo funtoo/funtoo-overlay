@@ -9,7 +9,7 @@ subarch="intel64-westmere"
 funtoo_staging_r = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", pull=True)
 head = funtoo_staging_r.head()
 print(head)
-success = True
+success = False
 if qa_build(host,"funtoo-current-next",arch_desc,subarch,head,"freshen"):
 	if qa_build(host,"funtoo-stable-next",arch_desc,subarch,head,"freshen"):
 		#if qa_build(host,"funtoo-current-hardened",arch_desc,subarch,head,"freshen"):
