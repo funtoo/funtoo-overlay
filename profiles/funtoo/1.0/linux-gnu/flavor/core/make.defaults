@@ -10,7 +10,4 @@ USE="$USE -alsa -cups -X -gtk -kde -introspection"						# For FL-46, FL-124, do 
 USE="$USE -systemd"										# FL-1329
 INPUT_DEVICES="evdev synaptics"  								#FL-159
 
-# This setting should be kept in sync with a >=dev-lang/php-5.x mask,
-# so that PHP_TARGETS always refers to the latest unmasked x.y version
-# of PHP.
-PHP_TARGETS="php5-5"
+

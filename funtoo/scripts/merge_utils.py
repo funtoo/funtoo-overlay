@@ -177,8 +177,8 @@ class ApplyPatchSeries(MergeStep):
 				runShell( "( cd %s; git apply %s/%s )" % ( tree.root, self.path, line[:-1] ))
 
 class RemoveFiles(MergeStep):
-	def __init__(self,globs=[])
-		self.flist = globs
+	def __init__(self,globs=[]):
+		self.globs = globs
 	
 	def run(self,tree):
 		for glob in self.globs:
@@ -408,12 +408,6 @@ class GitTree(Tree):
 			return self.commit
 		else:
 			return headSHA1(self.root)
-
-	def treelet_update(self, src_tree, select, skip=None):
-		steps = [
-		InsertEbuilds(src_tree, select=select, skip=skip, replace=True),
-		Minify()
-		]
 
 	def logTree(self,srctree):
 		# record name and SHA of src tree in dest tree, used for git commit message/auditing:
@@ -776,22 +770,5 @@ class Minify(MergeStep):
 	def run(self,tree):
 		runShell("( cd %s; find -iname ChangeLog -exec rm -f {} \; )" % tree.root )
 		runShell("( cd %s; find -iname Manifest -exec sed -n -i -e \"/DIST/p\" {} \; )" % tree.root )
-
-
-
-
-#xorg treelet:
-"""
-xorg_treelet = GitWriteTree(
-
-.treelet_update(gentoo_src, select=[
-	"x11-base/*",
-	"x11-drivers/*",
-	"x11-wm/twm",
-	"x11-terms/xterm"
-])
-"""
-
-
 
 # vim: ts=4 sw=4 noet

@@ -15,9 +15,14 @@ USE_EXPAND="${USE_EXPAND} NGINX_MODULES_EXTERNAL NGINX_MODULES_HTTP NGINX_MODULE
 USE_EXPAND="${USE_EXPAND} TENGINE_EXTERNAL_MODULES_HTTP TENGINE_MODULES_MAIL TENGINE_SHARED_MODULES_HTTP TENGINE_STATIC_MODULES_HTTP"
 
 # This value should be kept in synchronization with _PYTHON_GLOBALLY_NONDEFAULT_ABIS variable set in python.eclass by funtoo/scripts/merge.py.
+PYTHON_TARGETS="python2_7 python3_3"
+PYTHON_SINGLE_TARGET="python3_3"
 PYTHON_ABIS="2.7 3.3"
 
-USE="${USE} python_targets_python2_7 python_targets_python3_3 -python_targets_python3_4"
+# This setting should be kept in sync with a >=dev-lang/php-5.x mask,
+# so that PHP_TARGETS always refers to the latest unmasked x.y version
+# of PHP.
+PHP_TARGETS="php5-5"
 
 # USE_EXPAND variables whose contents are not shown in package manager
 # output. Changes need discussion on gentoo-dev.

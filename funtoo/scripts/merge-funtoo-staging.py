@@ -8,6 +8,17 @@ flags = {
 	"progress" : True
 }
 
+
+if "unfork" in sys.argv[1:]:
+	del flags["progress"]
+	funtoo_staging_w = GitTree("funtoo-staging-unfork", "master", "repos@localhost:ports/funtoo-staging-unfork.git", root="/var/git/dest-trees/funtoo-staging-unfork", pull=False, xml_out=None)
+	xmlfile=None
+else:
+	xml_out = etree.Element("packages")
+	funtoo_staging_w = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", root="/var/git/dest-trees/funtoo-staging", pull=False, xml_out=xml_out)
+	xmlfile="/home/ports/public_html/packages.xml"
+
+
 nopush=False
 
 funtoo_overlay = GitTree("funtoo-overlay", "master", "repos@localhost:funtoo-overlay.git", pull=True)
@@ -27,8 +38,6 @@ else:
 
 gentoo_staging_r = GitTree("gentoo-staging", "master", "repos@localhost:ports/gentoo-staging.git", commit=commit, pull=True)
 
-xml_out = etree.Element("packages")
-funtoo_staging_w = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", root="/var/git/dest-trees/funtoo-staging", pull=False, xml_out=xml_out)
 # These overlays are monitored for changes -- if there are changes in these overlays, we regenerate the entire
 # tree. If there aren't changes in these overlays, we don't.
 
@@ -41,12 +50,12 @@ funtoo_overlays = {
 	"funtoo_deadbeef" : GitTree("funtoo-deadbeef", "master", "https://github.com/damex/funtoo-deadbeef.git", pull=True),
 	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
-	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "45cac7981765a849a9d23a4c25718ecd7ecf5068", "repos@localhost:gentoo-perl-shard.git", pull=True),
+	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "faa495e899e073e307950749f2929dd88be61118", "repos@localhost:gentoo-perl-shard.git", pull=True),
 	"gentoo-kde-shard" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
-	"gentoo-core-shard" : GitTree("gentoo-core-shard", "d97a7517cd5badf06446f20bc912ed23ff881a1d", "repos@localhost:gentoo-core-shard.git", pull=True),
+	"gentoo-core-shard" : GitTree("gentoo-core-shard", "9a11a7dab9e799e74bb6f14a4724a24e8e3cc6ea", "repos@localhost:gentoo-core-shard.git", pull=True),
+	"funtoo-tengine" : GitTree("funtoo-tengine", "master", "https://github.com/damex/funtoo-tengine.git", pull=True),
 }
-if "progress" in flags:
-	funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
+funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
 # of these when we regenerate our tree.
@@ -62,7 +71,6 @@ other_overlays = {
 	"sabayon_for_gentoo" : GitTree("sabayon-for-gentoo", "master", "git://github.com/Sabayon/for-gentoo.git", pull=True),
 	"tripsix_overlay" : GitTree("tripsix", "master", "https://github.com/666threesixes666/tripsix.git", pull=True),
 	"faustoo_overlay" : GitTree("faustoo", "master", "https://github.com/fmoro/faustoo.git", pull=True),
-	"sera_overlay" : GitTree("sera", "master", "git://anongit.gentoo.org/dev/sera.git", pull=True),
 	"vmware_overlay" : GitTree("vmware", "master", "git://anongit.gentoo.org/proj/vmware.git", pull=True)
 }
 
@@ -76,8 +84,9 @@ else:
 		if funtoo_overlays[fo].changes:
 			funtoo_changes = True
 			break
-if len(sys.argv) > 1 and sys.argv[1] == "force":
-	print("Updates forced.")
+if len(sys.argv) > 1:
+	if "force" in sys.argv[1:]:
+		print("Updates forced.")
 elif not funtoo_changes:
 	print("No new funtoo changes were detected. Not updating funtoo-staging.")
 	sys.exit(2)
@@ -172,6 +181,7 @@ profile_steps = profile_steps + [
 		"profiles/package.mask/funtoo-toolchain":"profiles/funtoo/1.0/linux-gnu/build/stable/package.mask/funtoo-toolchain",
 		"profiles/package.mask/funtoo-toolchain-experimental":"profiles/funtoo/1.0/linux-gnu/build/experimental/package.mask/funtoo-toolchain",
 	}),
+	RunSed(["profiles/base/make.defaults"], ["/^PYTHON_TARGETS=/d", "/^PYTHON_SINGLE_TARGET=/d"]),
 ]
 
 # Steps related to copying ebuilds. Note that order can make a difference here when multiple overlays are
@@ -194,15 +204,15 @@ ebuild_additions = [
 
 ebuild_modifications = [
 	InsertEbuilds(other_overlays["vmware_overlay"], select=[ "app-emulation/vmware-modules" ], skip=None, replace=True, merge=True),
-	InsertEbuilds(other_overlays["sera_overlay"], select="all", skip=None, replace=True, merge=True),
 	InsertEbuilds(other_overlays["pantheon_overlay"], select=[ "x11-libs/granite", "x11-libs/bamf", "x11-themes/plank-theme-pantheon", "pantheon-base/plank", "x11-wm/gala"], skip=None, replace=True, merge=True),
 	InsertEbuilds(other_overlays["faustoo_overlay"], select=[ "app-office/projectlibre-bin" ], skip=None, replace=True),
 	InsertEbuilds(other_overlays["foo_overlay"], select="all", skip=["sys-fs/mdev-bb", "sys-fs/mdev-like-a-boss", "media-sound/deadbeef", "media-video/handbrake"], replace=["app-shells/rssh"]),
 	InsertEbuilds(funtoo_overlays["plex_overlay"], select=[ "media-tv/plex-media-server" ], skip=None, replace=True),
 	InsertEbuilds(other_overlays["causes_overlay"], select=[ "media-sound/renoise", "media-sound/renoise-demo", "sys-fs/smdev", "x11-wm/dwm" ], skip=None, replace=True),
-	InsertEbuilds(other_overlays["sabayon_for_gentoo"], select=["app-admin/equo", "app-admin/matter", "sys-apps/entropy", "sys-apps/entropy-server", "sys-apps/entropy-client-services","app-admin/rigo", "sys-apps/rigo-daemon", "sys-apps/magneto-core", "x11-misc/magneto-gtk", "x11-misc/magneto-gtk3", "x11-themes/numix-icon-theme", "kde-misc/magneto-kde", "app-misc/magneto-loader"], replace=True),
+	InsertEbuilds(other_overlays["sabayon_for_gentoo"], select=["app-admin/equo", "app-admin/matter", "sys-apps/entropy", "sys-apps/entropy-server", "sys-apps/entropy-client-services","app-admin/rigo", "sys-apps/rigo-daemon", "sys-apps/magneto-core", "x11-misc/magneto-gtk", "x11-misc/magneto-gtk3", "x11-themes/numix-icon-theme", "kde-misc/magneto-kde", "app-misc/magneto-loader", "media-video/kazam" ], replace=True),
 	InsertEbuilds(other_overlays["tripsix_overlay"], select=["media-sound/rakarrack"], skip=None, replace=True, merge=False),
 	InsertEbuilds(other_overlays["pinsard_overlay"], select=["x11-wm/qtile"], skip=None, replace=True, merge=False),
+	InsertEbuilds(funtoo_overlays["funtoo-tengine"], select=["www-plugins/*", "www-servers/*"], skip=None, replace=True),
 ]
 
 if "progress" in flags:
@@ -228,8 +238,8 @@ eclass_steps = [
 	SyncDir(funtoo_overlays["gentoo-perl-shard"].root,"eclass"),
 ]
 
-if "progress" in flags:
-	eclass_steps += [ SyncDir(funtoo_overlays["progress_overlay"].root, "eclass") ]
+# for now, unconditionally use progress eclasses for compatibility.
+eclass_steps += [ SyncDir(funtoo_overlays["progress_overlay"].root, "eclass") ]
 
 eclass_steps += [
 	SyncDir(funtoo_overlay.root, "eclass"),
@@ -265,7 +275,6 @@ all_steps = [ base_steps, profile_steps, ebuild_additions, ebuild_modifications,
 for step in all_steps:
 	funtoo_staging_w.run(step)
 funtoo_staging_w.gitCommit(message="glorious funtoo updates",branch=push)
-xmlfile="/home/ports/public_html/packages.xml"
 if xmlfile:
 	a=open(xmlfile,"wb")
 	etree.ElementTree(xml_out).write(a, encoding='utf-8', xml_declaration=True, pretty_print=True)
