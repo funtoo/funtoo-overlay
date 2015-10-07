@@ -1,4 +1,5 @@
 ARCH="x86"
+ABI="x86"
 ACCEPT_KEYWORDS="x86"
 
 CHOST="i686-pc-linux-gnu"

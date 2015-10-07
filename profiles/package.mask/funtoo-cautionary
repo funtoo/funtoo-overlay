@@ -5,11 +5,6 @@
 >=sys-devel/llvm-3.7
 >=sys-devel/clang-3.7
 
-# FL-2748: 6.0-r1 breaks metro builds due to breakage when built with high parallelism.
->=sys-libs/ncurses-6
-# this has the slotmove to 5
->=sys-libs/ncurses-5.9-r101
-
 # FL-2726: mask kdelibs-4.14.11 in Funtoo too
 =kde-base/kdelibs-4.14.11
 
@@ -77,12 +72,6 @@ app-text/pdftk
 # Daniel Robbins (28 Jun 2014)
 # FL-738: can break building of multiple packages (erlang, nginx, glibc, possibly guile (FL-919)
 app-admin/eselect-sh
-
-# Oleg Vinichenko (10 June 2014)
-# mask back python-3.4, this one not really fine to have installed. Also it become a default python version in stages.
-# Next time, allow to unmask only stable version of python with a consequent change of default PYTHON_ABIS. THis is 
-# FL-1274, FL-1265
->=dev-lang/python-3.4
 
 # Ryan Harris (23 Jul 2013)
 # Mask phoronix-test-suite due to security concerns

@@ -5,12 +5,14 @@ import sys
 from merge_utils import *
 
 flags = {
-	"progress" : True
+	"progress" : True,
+	"gnome" : True
 }
 
 
 if "unfork" in sys.argv[1:]:
 	del flags["progress"]
+	del flags["gnome"]
 	funtoo_staging_w = GitTree("funtoo-staging-unfork", "master", "repos@localhost:ports/funtoo-staging-unfork.git", root="/var/git/dest-trees/funtoo-staging-unfork", pull=False, xml_out=None)
 	xmlfile=None
 else:
@@ -52,9 +54,13 @@ funtoo_overlays = {
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
 	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "faa495e899e073e307950749f2929dd88be61118", "repos@localhost:gentoo-perl-shard.git", pull=True),
 	"gentoo-kde-shard" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
-	"gentoo-core-shard" : GitTree("gentoo-core-shard", "9a11a7dab9e799e74bb6f14a4724a24e8e3cc6ea", "repos@localhost:gentoo-core-shard.git", pull=True),
 	"funtoo-tengine" : GitTree("funtoo-tengine", "master", "https://github.com/damex/funtoo-tengine.git", pull=True),
 }
+if "unfork" in sys.argv[1:]:	
+	funtoo_overlays["gentoo-core-shard"] = GitTree("gentoo-core-shard", "master", "repos@localhost:gentoo-core-shard.git", pull=True)
+else:
+	funtoo_overlays["gentoo-core-shard"] = GitTree("gentoo-core-shard", "9a11a7dab9e799e74bb6f14a4724a24e8e3cc6ea", "repos@localhost:gentoo-core-shard.git", pull=True)
+
 funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
@@ -161,7 +167,7 @@ profile_steps = [
 	}) ]
 
 if "progress" in flags:
-	profile_steps = profile_steps + [
+	profile_steps += [
 		SyncDir(funtoo_overlays["progress_overlay"].root, "profiles/unpack_dependencies"),
 		SyncFiles(funtoo_overlays["progress_overlay"].root, {
 			"profiles/package.mask":"profiles/package.mask/progress",
@@ -170,10 +176,14 @@ if "progress" in flags:
 		}),
 	]
 
-profile_steps = profile_steps + [
-	SyncFiles(funtoo_overlays["funtoo_gnome"].root, {
-		"profiles/package.mask":"profiles/funtoo/1.0/linux-gnu/mix-ins/gnome/package.mask"
-	}),
+if "gnome" in flags:
+	profile_steps += [ 
+		SyncFiles(funtoo_overlays["funtoo_gnome"].root, {
+			"profiles/package.mask":"profiles/funtoo/1.0/linux-gnu/mix-ins/gnome/package.mask"
+		}),
+	]
+
+profile_steps += [
 	SyncFiles(funtoo_overlays["funtoo_toolchain"].root, {
 		"profiles/package.mask/funtoo-toolchain":"profiles/funtoo/1.0/linux-gnu/build/current/package.mask/funtoo-toolchain",
 	}),
@@ -216,10 +226,14 @@ ebuild_modifications = [
 ]
 
 if "progress" in flags:
-	ebuild_modifications = ebuild_modifications + [ InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False) ]
+	ebuild_modifications += [ InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False) ]
 
-ebuild_modifications = ebuild_modifications + [
-	InsertEbuilds(funtoo_overlays["funtoo_gnome"], select="all", skip=None, replace=True, merge=["dev-python/pyatspi", "dev-python/pygobject", "dev-util/gdbus-codegen", "x11-libs/vte"]),
+if "gnome" in flags:
+	ebuild_modifications += [
+		InsertEbuilds(funtoo_overlays["funtoo_gnome"], select="all", skip=None, replace=True, merge=["dev-python/pyatspi", "dev-python/pygobject", "dev-util/gdbus-codegen", "x11-libs/vte"]),
+	]
+
+ebuild_modifications += [
 	InsertEbuilds(funtoo_overlays["funtoo_media"], select="all", skip=None, replace=True),
 	InsertEbuilds(funtoo_overlay, select="all", skip=None, replace=True),
 	InsertEbuilds(funtoo_overlays["funtoo_toolchain"], select="all", skip=None, replace=True, merge=False),
@@ -233,7 +247,14 @@ ebuild_modifications = ebuild_modifications + [
 
 eclass_steps = [
 	SyncDir(funtoo_overlays["funtoo_deadbeef"].root,"eclass"),
-	SyncDir(funtoo_overlays["funtoo_gnome"].root,"eclass"),
+]
+
+if "gnome" in flags:
+	eclass_steps += [
+		SyncDir(funtoo_overlays["funtoo_gnome"].root,"eclass"),
+]
+
+eclass_steps += [
 	SyncDir(funtoo_overlays["gentoo-kde-shard"].root,"eclass"),
 	SyncDir(funtoo_overlays["gentoo-perl-shard"].root,"eclass"),
 ]

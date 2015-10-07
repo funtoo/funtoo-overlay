@@ -11,6 +11,7 @@ gentoo_staging_w = GitTree("gentoo-staging", "master", "repos@localhost:ports/ge
 perl_shard = GitTree("gentoo-perl-shard", "master", "repos@localhost:gentoo-perl-shard.git", root="/var/git/dest-trees/gentoo-perl-shard", pull=False)
 python_shard = GitTree("gentoo-python-shard", "master", "repos@localhost:gentoo-python-shard.git", root="/var/git/dest-trees/gentoo-python-shard", pull=False)
 kde_shard = GitTree("gentoo-kde-shard", "master", "repos@localhost:gentoo-kde-shard.git", root="/var/git/dest-trees/gentoo-kde-shard", pull=False)
+gnome_shard = GitTree("gentoo-gnome-shard", "master", "repos@localhost:gentoo-gnome-shard.git", root="/var/git/dest-trees/gentoo-gnome-shard", pull=False)
 core_shard = GitTree("gentoo-core-shard", "master", "repos@localhost:gentoo-core-shard.git", root="/var/git/dest-trees/gentoo-core-shard", pull=False)
 
 # This function updates the gentoo-staging tree with all the latest gentoo updates:
@@ -51,6 +52,12 @@ def gentoo_staging_update():
 		InsertEclasses(gentoo_staging_w, select=re.compile("gnome-python.*\.eclass")),
 		
 	]
+	gnome_shard_steps = [
+		GitCheckout("master"),
+		CleanTree(),
+		InsertEbuilds(gentoo_staging_w, select=get_pkglist("gnome-packages"), skip=None, replace=True),
+		InsertEclasses(gentoo_staging_w, select=re.compile("gnome.*\.eclass")),
+	]
 	kde_shard_steps = [
 		GitCheckout("master"),
 		CleanTree(),
@@ -73,6 +80,8 @@ def gentoo_staging_update():
 	perl_shard.gitCommit(message="gentoo updates", branch="master")
 	python_shard.run(python_shard_steps)
 	python_shard.gitCommit(message="gentoo updates", branch="master")
+	gnome_shard.run(gnome_shard_steps)
+	gnome_shard.gitCommit(message="gentoo updates", branch="master")
 	kde_shard.run(kde_shard_steps)
 	kde_shard.gitCommit(message="gentoo updates", branch="master")
 	core_shard.run(core_shard_steps)
