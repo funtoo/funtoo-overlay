@@ -6,20 +6,15 @@ from merge_utils import *
 
 flags = {
 	"progress" : True,
-	"gnome" : True
+	"old-gnome" : True
 }
 
-
-if "unfork" in sys.argv[1:]:
-	del flags["progress"]
-	del flags["gnome"]
-	funtoo_staging_w = GitTree("funtoo-staging-unfork", "master", "repos@localhost:ports/funtoo-staging-unfork.git", root="/var/git/dest-trees/funtoo-staging-unfork", pull=False, xml_out=None)
-	xmlfile=None
-else:
-	xml_out = etree.Element("packages")
-	funtoo_staging_w = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", root="/var/git/dest-trees/funtoo-staging", pull=False, xml_out=xml_out)
-	xmlfile="/home/ports/public_html/packages.xml"
-
+del flags["progress"]
+del flags["old-gnome"]
+xml_out = etree.Element("packages")
+funtoo_staging_w = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", root="/var/git/dest-trees/funtoo-staging", pull=False, xml_out=xml_out)
+#funtoo_staging_w = GitTree("funtoo-staging-unfork", "master", "repos@localhost:ports/funtoo-staging-unfork.git", root="/var/git/dest-trees/funtoo-staging-unfork", pull=False, xml_out=None)
+xmlfile="/home/ports/public_html/packages.xml"
 
 nopush=False
 
@@ -43,24 +38,26 @@ gentoo_staging_r = GitTree("gentoo-staging", "master", "repos@localhost:ports/ge
 # These overlays are monitored for changes -- if there are changes in these overlays, we regenerate the entire
 # tree. If there aren't changes in these overlays, we don't.
 
+shards = {
+	"perl" : GitTree("gentoo-perl-shard", "faa495e899e073e307950749f2929dd88be61118", "repos@localhost:gentoo-perl-shard.git", pull=True),
+	"kde" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
+	"gnome" : GitTree("gentoo-gnome-shard", "4d5473019d599229cb54edde7f5a7e48df46302f", "repos@localhost:ports/gentoo-gnome-shard.git", pull=True),
+	"x11" : GitTree("gentoo-x11-shard", "a4dacbfbf36af074cc2bed2185dc696fb1af0cc2", "repos@localhost:ports/gentoo-x11-shard.git", pull=True),
+	"core" : GitTree("gentoo-core-shard", "62af1de1113dc46599807f745788d248dd524d33", "repos@localhost:gentoo-core-shard.git", pull=True)
+}
+
 funtoo_overlays = {
 	"funtoo_media" : GitTree("funtoo-media", "master", "repos@localhost:funtoo-media.git", pull=True),
 	"plex_overlay" : GitTree("funtoo-plex", "master", "https://github.com/Ghent/funtoo-plex.git", pull=True),
 	"funtoo_gnome" : GitTree("funtoo-gnome", "master", "repos@localhost:funtoo-gnome-overlay.git", pull=True),
+	"gnome_fixups" : GitTree("gnome-3.16-fixups", "master", "repos@localhost:ports/gnome-3.16-fixups.git", pull=True),
 	"funtoo_toolchain" : GitTree("funtoo-toolchain", "master", "repos@localhost:funtoo-toolchain-overlay.git", pull=True),
 	"ldap_overlay" : GitTree("funtoo-ldap", "master", "repos@localhost:funtoo-ldap-overlay.git", pull=True),
 	"funtoo_deadbeef" : GitTree("funtoo-deadbeef", "master", "https://github.com/damex/funtoo-deadbeef.git", pull=True),
 	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
-	"gentoo-perl-shard" : GitTree("gentoo-perl-shard", "faa495e899e073e307950749f2929dd88be61118", "repos@localhost:gentoo-perl-shard.git", pull=True),
-	"gentoo-kde-shard" : GitTree("gentoo-kde-shard", "089085ae6cc794e684b91a9e33d9d5d82f7cce4d", "repos@localhost:gentoo-kde-shard.git", pull=True),
 	"funtoo-tengine" : GitTree("funtoo-tengine", "master", "https://github.com/damex/funtoo-tengine.git", pull=True),
 }
-if "unfork" in sys.argv[1:]:	
-	funtoo_overlays["gentoo-core-shard"] = GitTree("gentoo-core-shard", "master", "repos@localhost:gentoo-core-shard.git", pull=True)
-else:
-	funtoo_overlays["gentoo-core-shard"] = GitTree("gentoo-core-shard", "9a11a7dab9e799e74bb6f14a4724a24e8e3cc6ea", "repos@localhost:gentoo-core-shard.git", pull=True)
-
 funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
@@ -90,14 +87,6 @@ else:
 		if funtoo_overlays[fo].changes:
 			funtoo_changes = True
 			break
-if len(sys.argv) > 1:
-	if "force" in sys.argv[1:]:
-		print("Updates forced.")
-elif not funtoo_changes:
-	print("No new funtoo changes were detected. Not updating funtoo-staging.")
-	sys.exit(2)
-else:
-	print("Changes were detectd in funtoo overlays -- updating funtoo-staging.")
 
 # This next code regenerates the contents of the funtoo-staging tree. Funtoo's tree is itself composed of
 # many different overlays which are merged in an automated fashion. This code does it all.
@@ -113,12 +102,6 @@ else:
 # branch, copying almost the full entirety of Gentoo's portage tree to our destination tree, and copying over
 # funtoo overlay licenses, metadata, and also copying over GLSA's.
 
-cpkg_fn = os.path.dirname(os.path.abspath(__file__)) + "/core-packages"
-cpkg = open(cpkg_fn,"r")
-core_patterns = []
-for line in cpkg:
-	core_patterns.append(line.strip())
-
 base_steps = [
 	GitCheckout("master"),
 	SyncFromTree(gentoo_staging_r, exclude=[ 
@@ -127,16 +110,6 @@ base_steps = [
 		"dev-util/metro",
 		"skel.ChangeLog",
 	]),
-	InsertEbuilds(funtoo_overlays["gentoo-core-shard"], select=core_patterns, skip=None, replace=True),
-	InsertEclasses(funtoo_overlays["gentoo-core-shard"], select=re.compile(".*\.eclass")),
-	SyncDir(funtoo_overlay.root,"licenses"),
-	SyncDir(funtoo_overlay.root,"metadata"),
-	SyncFiles(funtoo_overlay.root, {
-		"COPYRIGHT.txt":"COPYRIGHT.txt",
-		"LICENSE.txt":"LICENSE.txt",
-		"README.rst":"README.rst",
-		"header.txt":"header.txt",
-	}),
 ]
 
 # Steps related to generating system profiles. These can be quite order-dependent and should be handled carefully.
@@ -176,7 +149,7 @@ if "progress" in flags:
 		}),
 	]
 
-if "gnome" in flags:
+if "old-gnome" in flags:
 	profile_steps += [ 
 		SyncFiles(funtoo_overlays["funtoo_gnome"].root, {
 			"profiles/package.mask":"profiles/funtoo/1.0/linux-gnu/mix-ins/gnome/package.mask"
@@ -228,43 +201,30 @@ ebuild_modifications = [
 if "progress" in flags:
 	ebuild_modifications += [ InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False) ]
 
-if "gnome" in flags:
+if "old-gnome" in flags:
 	ebuild_modifications += [
 		InsertEbuilds(funtoo_overlays["funtoo_gnome"], select="all", skip=None, replace=True, merge=["dev-python/pyatspi", "dev-python/pygobject", "dev-util/gdbus-codegen", "x11-libs/vte"]),
 	]
 
 ebuild_modifications += [
 	InsertEbuilds(funtoo_overlays["funtoo_media"], select="all", skip=None, replace=True),
-	InsertEbuilds(funtoo_overlay, select="all", skip=None, replace=True),
-	InsertEbuilds(funtoo_overlays["funtoo_toolchain"], select="all", skip=None, replace=True, merge=False),
 	InsertEbuilds(funtoo_overlays["ldap_overlay"], select="all", skip=None, replace=True),
-	RemoveFiles(globs=get_pkglist("kde-packages")),
-	InsertEbuilds(funtoo_overlays["gentoo-kde-shard"], select="all", skip=None, replace=True),
-	InsertEbuilds(funtoo_overlays["gentoo-perl-shard"], select="all", skip=None, replace=True),
 ]
+
+if "old-gnome" not in flags:
+	ebuild_modifications += [
+		InsertEbuilds(shards["gnome"], select="all", skip=None, replace=True),
+		InsertEbuilds(funtoo_overlays["gnome_fixups"], select="all", skip=None, replace=True)
+	]
 
 # Steps related to eclass copying:
 
-eclass_steps = [
-	SyncDir(funtoo_overlays["funtoo_deadbeef"].root,"eclass"),
-]
-
-if "gnome" in flags:
+eclass_steps = []
+if "old-gnome" in flags:
 	eclass_steps += [
 		SyncDir(funtoo_overlays["funtoo_gnome"].root,"eclass"),
 ]
 
-eclass_steps += [
-	SyncDir(funtoo_overlays["gentoo-kde-shard"].root,"eclass"),
-	SyncDir(funtoo_overlays["gentoo-perl-shard"].root,"eclass"),
-]
-
-# for now, unconditionally use progress eclasses for compatibility.
-eclass_steps += [ SyncDir(funtoo_overlays["progress_overlay"].root, "eclass") ]
-
-eclass_steps += [
-	SyncDir(funtoo_overlay.root, "eclass"),
-]
 
 # General tree preparation steps -- finishing touches. This is where you should put steps that require all ebuilds
 # from all trees to all be inserted (like AutoGlobMask calls) as well as misc. copying of files like licenses and
@@ -279,9 +239,32 @@ if "progress" in flags:
 		MergeUpdates(funtoo_overlays["progress_overlay"].root),
 	]
 
+master_steps = [
+	InsertEbuilds(shards["perl"], select="all", skip=None, replace=True),
+	InsertEclasses(shards["perl"], select=re.compile(".*\.eclass")),
+	InsertEbuilds(shards["x11"], select="all", skip=None, replace=True),
+	InsertEbuilds(shards["kde"], select="all", skip=None, replace=True),
+	InsertEclasses(shards["kde"], select=re.compile(".*\.eclass")),
+	InsertEbuilds(shards["core"], select="all", skip=None, replace=True),
+	InsertEclasses(shards["core"], select=re.compile(".*\.eclass")),
+	InsertEbuilds(funtoo_overlays["funtoo_toolchain"], select="all", skip=None, replace=True, merge=False),
+	InsertEbuilds(funtoo_overlay, select="all", skip=None, replace=True),
+	# for now, unconditionally use progress eclasses for compatibility.
+	SyncDir(funtoo_overlays["progress_overlay"].root, "eclass"),
+	SyncDir(funtoo_overlay.root, "eclass"),
+	SyncDir(funtoo_overlay.root,"licenses"),
+	SyncDir(funtoo_overlay.root,"metadata"),
+	SyncFiles(funtoo_overlay.root, {
+		"COPYRIGHT.txt":"COPYRIGHT.txt",
+		"LICENSE.txt":"LICENSE.txt",
+		"README.rst":"README.rst",
+		"header.txt":"header.txt",
+	}),
+]
+
 treeprep_steps += [
 	MergeUpdates(funtoo_overlay.root),
-	AutoGlobMask("dev-lang/python", "python*_pre*", "funtoo-python"),
+	AutoGlobMask("dev-lang/python", "python*_pre*", "funtoo-python_pre"),
 	ThirdPartyMirrors(),
 	ProfileDepFix(),
 	Minify(),
@@ -291,7 +274,7 @@ treeprep_steps += [
 	GenUseLocalDesc()
 ]
 
-all_steps = [ base_steps, profile_steps, ebuild_additions, ebuild_modifications, eclass_steps, treeprep_steps ]
+all_steps = [ base_steps, profile_steps, ebuild_additions, ebuild_modifications, eclass_steps, master_steps, treeprep_steps ]
 
 for step in all_steps:
 	funtoo_staging_w.run(step)

@@ -1,3 +1,9 @@
+# for 3.16
+x11-wm/mutter -kms
+>=media-libs/clutter-1.22.4 egl
+>=www-servers/apache-2.4.16 apache2_mpms_prefork apache2_modules_auth_digest
+>=gnome-base/gnome-control-center-3.16.3 networkmanager
+
 # FL-1940: prefer gstreamer for app-misc/tracker
 app-misc/tracker -ffmpeg
 
@@ -9,7 +15,7 @@ media-plugins/grilo-plugins upnp-av
 # Required by GNOME 3.14 (base) for a clean emerge.
 media-libs/cogl gles2
 media-libs/mesa gles2
-virtual/notification-daemon -gnome
+virtual/notification-daemon
 x11-libs/libxcb xkb
 
 # Required by GNOME for a more complete experience.
@@ -25,7 +31,6 @@ net-misc/networkmanager bluetooth connection-sharing consolekit upower wifi
 gnome-base/gvfs udisks
 media-libs/grilo playlist
 net-misc/networkmanager modemmanager ppp
-www-servers/apache apache2_modules_auth_digest
 
 # eds is a problematic flag, causing many package to fail. It does allow
 # to build gnome clean but leading to pidgin failures. FL-347

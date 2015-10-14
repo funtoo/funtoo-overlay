@@ -214,3 +214,4 @@ x11-themes/gnome-icon-theme-symbolic
 x11-themes/gnome-themes-standard
 x11-wm/metacity
 x11-wm/mutter
+@eclass@:gnome.*\.eclass
