@@ -6,11 +6,12 @@ inherit eutils linux-info multilib systemd toolchain-funcs
 
 DESCRIPTION="Hardware Monitoring user-space utilities"
 HOMEPAGE="http://www.lm-sensors.org/"
-SRC_URI="http://dl.lm-sensors.org/lm-sensors/releases/${P}.tar.bz2"
-
+SRC_URI="mirror://funtoo/${P}.tar.bz2"
 LICENSE="GPL-2 LGPL-2.1"
 SLOT="0"
-KEYWORDS="~*"
+KEYWORDS="*"
+RESTRICT="mirror"
+
 IUSE="sensord static-libs"
 
 RDEPEND="

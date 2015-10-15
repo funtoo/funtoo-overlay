@@ -1,1 +1,0 @@
-DB_SOCKET="unix:/var/run/openvswitch/db.sock"

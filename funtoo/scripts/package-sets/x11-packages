@@ -1,0 +1,8 @@
+media-fonts/*
+media-libs/*
+x11-apps/*
+x11-base/*
+x11-drivers/*
+x11-libs/*
+x11-misc/*
+x11-proto/*

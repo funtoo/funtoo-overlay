@@ -39,8 +39,8 @@ SLOT="0"
 KEYWORDS="*"
 IUSE="afs bashlogger examples mem-scramble +net nls plugins +readline vanilla"
 
-DEPEND=">=sys-libs/ncurses-5.2-r2
-	readline? ( >=sys-libs/readline-${READLINE_VER} )
+DEPEND=">=sys-libs/ncurses-5.2-r2:0=
+	readline? ( >=sys-libs/readline-${READLINE_VER}:0= )
 	nls? ( virtual/libintl )"
 RDEPEND="${DEPEND}
 	!<sys-apps/portage-2.1.6.7_p1

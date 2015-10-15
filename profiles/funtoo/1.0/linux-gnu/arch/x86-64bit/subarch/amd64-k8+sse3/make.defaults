@@ -3,4 +3,4 @@ CXXFLAGS="${CFLAGS}"
 FFLAGS="${CFLAGS}"
 FCFLAGS="${CFLAGS}"
 
-CPU_FLAGS_X86="3dnow 3dnowext mmx mmxext sse sse2 ssse3"
+CPU_FLAGS_X86="3dnow 3dnowext mmx mmxext sse sse2 sse3"

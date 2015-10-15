@@ -8,3 +8,7 @@ app-text/poppler cairo
 media-gfx/imagemagick png jpeg
 net-misc/networkmanager modemmanager ppp
 x11-libs/cairo opengl
+
+# FL-2486
+app-misc/tracker -ffmpeg
+

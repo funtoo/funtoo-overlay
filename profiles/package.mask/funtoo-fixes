@@ -1,0 +1,5 @@
+#FL-2814
+>=net-misc/tor-0.2.7.3
+
+# FL-2803
+>=media-libs/fontconfig-2.11.93

@@ -1,3 +1,6 @@
+#FL-1846
+sys-libs/zlib minizip
+
 # Stage3 kernel now getting built with binary flag.
 sys-kernel/debian-sources binary
 
