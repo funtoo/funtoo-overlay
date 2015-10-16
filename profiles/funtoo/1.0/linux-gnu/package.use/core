@@ -1,3 +1,5 @@
+# avoid having a gawk->readline->ncurses dependency, since gawk is used in almost all configure scripts.
+sys-apps/gawk -readline
 sys-apps/util-linux static-libs
 sys-fs/eudev gudev static-libs
 virtual/libudev static-libs
