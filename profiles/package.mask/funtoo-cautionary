@@ -1,3 +1,7 @@
+# FL-2869: mask alpha release of mysql-init-scripts, which require masked version of openrc
+# fine to remove with releasing of openrc
+>dev-db/mysql-init-scripts-2.0-r1
+
 # precautionary mask as newer versions appear to break GNOME 3 and other DE's
 >sys-auth/consolekit-0.4.6
 
@@ -7,9 +11,6 @@
 
 # FL-2726: mask kdelibs-4.14.11 in Funtoo too
 =kde-base/kdelibs-4.14.11
-
-# FL-2704: mask very latet mongodb (and newer), until boost also unmasked.
->dev-db/mongodb-3.0.4
 
 # FL-2678: mask xbmc. kodi is a new and working version.
 # Users with installed version and not planning to update xbmc need to put this entry to package.unmask
