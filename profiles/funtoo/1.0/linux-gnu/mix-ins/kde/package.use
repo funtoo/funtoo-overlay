@@ -30,6 +30,3 @@ media-libs/phonon-vlc qt5
 sys-auth/polkit-kde-agent minimal
 sys-auth/polkit-qt qt5
 x11-libs/libxcb xkb
-
-# Disable legacy kde4-l10n localization as required by several KDE Frameworks 5 packages
->=kde-apps/kde4-l10n-15.08.0 minimal
