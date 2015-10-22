@@ -1,5 +1,8 @@
+#FL-2903: these drivers are not reliable, beta only
+=x11-drivers/nvidia-drivers-358*
+
 #FL-2814
 >=net-misc/tor-0.2.7.3
 
-# FL-2803
->=media-libs/fontconfig-2.11.93
+# FL-2803, also note FL-2885 - a pango rebuild may be required after downgrade
+>=media-libs/fontconfig-2.11.2

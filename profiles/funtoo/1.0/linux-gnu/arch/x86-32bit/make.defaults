@@ -1,6 +1,10 @@
 ARCH="x86"
 ABI="x86"
 ACCEPT_KEYWORDS="x86"
+MULTILIB_ABIS="x86"
+DEFAULT_ABI="x86"
+IUSE_IMPLICIT="abi_x86_32"
+LIBDIR_x86="lib"
 
 CHOST="i686-pc-linux-gnu"
 CFLAGS="-O2 -mtune=i686 -pipe"

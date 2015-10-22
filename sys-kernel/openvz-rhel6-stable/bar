@@ -1,0 +1,23 @@
+diff -urN linux-rhel5-openvz-sources-2.6.18.028.070.14/Makefile linux-rhel5-openvz-sources-2.6.18.028.070.14.fixed//Makefile
+--- linux-rhel5-openvz-sources-2.6.18.028.070.14/Makefile	2010-11-26 23:34:35.866268204 -0700
++++ linux-rhel5-openvz-sources-2.6.18.028.070.14.fixed//Makefile	2010-11-26 23:36:21.976199312 -0700
+@@ -189,8 +189,8 @@
+ 	  else if [ -x /bin/bash ]; then echo /bin/bash; \
+ 	  else echo sh; fi ; fi)
+ 
+-HOSTCC       = gcc
+-HOSTCXX      = g++
++HOSTCC       = gcc-4.1.2
++HOSTCXX      = g++-4.1.2
+ HOSTCFLAGS   = -Wall -Wstrict-prototypes -O2 -fomit-frame-pointer
+ HOSTCXXFLAGS = -O2
+ 
+@@ -275,7 +275,7 @@
+ 
+ AS		= $(CROSS_COMPILE)as
+ LD		= $(CROSS_COMPILE)ld
+-CC		= $(CROSS_COMPILE)gcc
++CC		= $(CROSS_COMPILE)gcc-4.1.2
+ CPP		= $(CC) -E
+ AR		= $(CROSS_COMPILE)ar
+ NM		= $(CROSS_COMPILE)nm

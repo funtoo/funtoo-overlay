@@ -51,6 +51,8 @@ sys-apps/makedev
 
 # Protect against beta OpenRC
 >=sys-apps/openrc-0.12.5
+# QA-289
+>=dev-db/mysql-init-scripts-2.1_alpha4
 
 # mask latest nfs-utils, there is major change in netmount/nfsmount in latest openrc. nfs-utils using new scripts and has higher openrc dependency. This can be removed with openrc update
 

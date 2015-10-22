@@ -33,6 +33,7 @@ RDEPEND="net-firewall/iptables
 			)
 		virtual/udev
 		app-arch/xz-utils
+		app-misc/vzstats
 		"
 
 DEPEND="${RDEPEND}

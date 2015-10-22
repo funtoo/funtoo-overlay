@@ -1,8 +1,2 @@
 =dev-lang/python-2* -berkdb
 dev-lang/python sqlite
-
-# Stuff that needs python 2.7 to build so won't build with the default of 3.3.
-# We must manually enable 2.7 for these tools.
-
-app-text/asciidoc python_single_target_python2_7
-dev-db/postgresql python_single_target_python2_7

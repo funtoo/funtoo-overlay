@@ -1,5 +1,6 @@
 media-fonts/*
 media-libs/*
+media-video/*
 x11-apps/*
 x11-base/*
 x11-drivers/*

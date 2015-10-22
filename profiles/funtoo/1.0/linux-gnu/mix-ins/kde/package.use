@@ -1,3 +1,6 @@
+#Disable legacy kde4-l10n localization as required by several KDE Frameworks 5 packages
+kde-apps/kde4-l10n minimal
+
 # FL-2771. Enable minimal USE flag for kde-base/kactivities to remove block of kde-frameworks/kactivities
 kde-base/kactivities minimal
 
