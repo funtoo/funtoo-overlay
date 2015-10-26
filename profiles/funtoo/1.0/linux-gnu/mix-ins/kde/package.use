@@ -1,20 +1,32 @@
-# FL-1836. enable soprano use flag:
-app-office/akonadi-server soprano
+# FL-2771. Enable minimal USE flag for kde-base/kactivities to remove block of kde-frameworks/kactivities
+kde-base/kactivities minimal
 
-#FL-1541.Enable xmp USE flag to exiv2. Required for clean kde-meta install.
+# FL-2772. Update kde mix-in to enable clean kde-base/kde-meta install.
+# required by kde-base/pykde4
+dev-python/PyQt4 declarative script sql webkit
+
+# required by kde-apps/kopete
+dev-qt/qtgui mng
+
+# required by app-office/akondai-server
+dev-qt/qtsql mysql
+
+# useful for reporting bugs on segfaults
+kde-apps/kdebase-runtime-meta crash-reporter
+
+# https://bugs.gentoo.org/457934
+# Helps with zip files that have corrupted filenames
+app-arch/unzip natspec
+
+# required by kde-apps/libkexiv2
 media-gfx/exiv2 xmp
-dev-libs/libxml2 -icu
-dev-qt/qtwebkit -icu
-app-text/poppler qt4
-dev-python/PyQt4 declarative script sql svg webkit
-kde-base/kdelibs opengl
-kde-base/kwin opengl
-media-libs/gd png
-media-plugins/gst-plugins-meta ogg vorbis
-sys-fs/udev extras
-dev-qt/qthelp qt3support
-dev-qt/qtcore qt3support
-dev-qt/qtdeclarative qt3support
-dev-qt/qtgui mng qt3support
-dev-qt/qtopengl qt3support
-dev-qt/qtsql mysql qt3support
+
+# FL-2760. Additional USE changes for clean kde-meta install with packages updated to a KDE Frameworks 5 basis.
+# (For kde-plasma/polkit-kde-agent)
+dev-libs/libdbusmenu-qt qt5
+dev-libs/libpcre pcre16
+media-libs/phonon qt5
+media-libs/phonon-vlc qt5
+sys-auth/polkit-kde-agent minimal
+sys-auth/polkit-qt qt5
+x11-libs/libxcb xkb

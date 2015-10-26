@@ -8,8 +8,13 @@ gentoo_staging_w = GitTree("gentoo-staging", "master", "repos@localhost:ports/ge
 # shards are overlays where we collect gentoo's most recent changes. This way, we can merge specific versions rather than always be forced to
 # get the latest.
 
-perl_shard = GitTree("gentoo-perl-shard", "master", "repos@localhost:gentoo-perl-shard.git", root="/var/git/dest-trees/gentoo-perl-shard", pull=False)
-python_shard = GitTree("gentoo-python-shard", "master", "repos@localhost:gentoo-python-shard.git", root="/var/git/dest-trees/gentoo-python-shard", pull=False)
+shard_names = [ "perl", "python", "kde", "gnome", "core", "x11" ]
+shards = {}
+shard_steps = {}
+
+for s in shard_names:
+	shards[s] = GitTree("gentoo-%s-shard" % s, "master", "repos@localhost:gentoo-%s-shard.git" % s, root="/var/git/dest-trees/gentoo-%s-shard" % s, pull=False)
+	shard_steps[s] = generateShardSteps(s, gentoo_staging_w)
 
 # This function updates the gentoo-staging tree with all the latest gentoo updates:
 
@@ -23,6 +28,7 @@ def gentoo_staging_update():
 		gentoo_glsa = GitTree("gentoo-glsa", "master", "git://anongit.gentoo.org/data/glsa.git", pull=True)
 	# This is the gentoo-staging tree, stored in a different place locally, so we can simultaneously be updating gentoo-staging and reading
 	# from it without overwriting ourselves:
+
 	all_steps = [
 		GitCheckout("master"),
 		SyncFromTree(gentoo_src, exclude=["metadata/.gitignore", "/metadata/cache/**", "ChangeLog", "dev-util/metro"]),
@@ -30,31 +36,12 @@ def gentoo_staging_update():
 		SyncDir(gentoo_glsa.root, srcdir=None, destdir="metadata/glsa", exclude=["glsa-200*.xml","glsa-2010*.xml", "glsa-2011*.xml"]) if not gentoo_use_rsync else None,
 	]
 
-	perl_shard_steps = [
-		GitCheckout("master"),
-		CleanTree(),
-		InsertEbuilds(gentoo_staging_w, select=re.compile("dev-perl/.*"), skip=None, replace=True),
-		InsertEbuilds(gentoo_staging_w, select=re.compile("perl-core/.*"), skip=None, replace=True),
-		InsertEbuilds(gentoo_staging_w, select=[ "dev-lang/perl" ], skip=None, replace=True),
-		InsertEbuilds(gentoo_staging_w, select=re.compile("virtual/perl-.*"), skip=None, replace=True),
-		SyncFiles(gentoo_staging_w.root, { "eclass/perl-app.eclass" : "eclass/perl-app.eclass", "eclass/perl-module.eclass" : "eclass/perl-module.eclass" })
-	]
-	python_shard_steps = [
-		GitCheckout("master"),
-		CleanTree(),
-		InsertEbuilds(gentoo_staging_w, select=re.compile("dev-python/.*"), skip=None, replace=True),
-		InsertEbuilds(gentoo_staging_w, select=[ "dev-lang/python", "dev-lang/python-exec" ], skip=None, replace=True),
-		InsertEbuilds(gentoo_staging_w, select=re.compile("virtual/py.*"), skip=None, replace=True),
-		InsertEclasses(gentoo_staging_w, select=re.compile("python.*\.eclass")),
-		InsertEclasses(gentoo_staging_w, select=re.compile("gnome-python.*\.eclass")),
-		
-	]
 	gentoo_staging_w.run(all_steps)
 	gentoo_staging_w.gitCommit(message="gentoo updates", branch="master")
-	perl_shard.run(perl_shard_steps)
-	perl_shard.gitCommit(message="gentoo updates", branch="master")
-	python_shard.run(python_shard_steps)
-	python_shard.gitCommit(message="gentoo updates", branch="master")
+
+	for s in shard_names:
+		shards[s].run(shard_steps[s])
+		shards[s].gitCommit(message="gentoo updates", branch="master")
 
 gentoo_staging_update()
 

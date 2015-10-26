@@ -20,7 +20,7 @@ SRC_URI="https://www.github.com/${GITHUB_USER}/${GITHUB_REPO}/tarball/${GITHUB_T
 IUSE=""
 
 DEPEND=""
-RDEPEND=">=sys-boot/grub-2.00-r5"
+RDEPEND=">=sys-boot/grub-2.00-r5[binfont]"
 
 src_unpack() {
 	unpack ${A}

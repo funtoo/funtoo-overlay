@@ -14,6 +14,37 @@ debug = False
 
 mergeLog = open("/var/tmp/merge.log","w")
 
+def get_pkglist(fname):
+	cpkg_fn = os.path.dirname(os.path.abspath(__file__)) + "/" + fname
+	cpkg = open(cpkg_fn,"r")
+	patterns = []
+	for line in cpkg:
+		patterns.append(line.strip())
+	return patterns
+
+def generateShardSteps(name, from_tree, branch="master"):
+	steps = [
+		GitCheckout(branch),
+		CleanTree()
+	]
+	pkglist = []
+	for pattern in get_pkglist("package-sets/%s-packages" % name):
+		if pattern.startswith("@regex@:"):
+			if pkglist:
+				steps += [ InsertEbuilds(from_tree, select=pkglist, skip=None, replace=True) ]
+			pkglist = []
+			steps += [ InsertEbuilds(from_tree, select=re.compile(pattern[8:]), skip=None, replace=True) ]
+		elif pattern.startswith("@eclass@:"):
+			if pkglist:
+				steps += [ InsertEbuilds(from_tree, select=pkglist, skip=None, replace=True) ]
+			pkglist = []
+			steps += [ InsertEclasses(from_tree, select=re.compile(pattern[9:])) ]
+		else:
+			pkglist.append(pattern)
+	if pkglist:
+		steps += [ InsertEbuilds(from_tree, select=pkglist, skip=None, replace=True) ]
+	return steps
+
 def qa_build(host,build,arch_desc,subarch,head,target):
 	success = False
 	print("Performing remote QA build on %s for %s %s %s %s (%s)" % (host, build, arch_desc, subarch, head, target))
@@ -167,6 +198,15 @@ class ApplyPatchSeries(MergeStep):
 				runShell( "( cd %s; %s/%s )" % ( tree.root, self.path, ls[1] ))
 			else:
 				runShell( "( cd %s; git apply %s/%s )" % ( tree.root, self.path, line[:-1] ))
+
+class RemoveFiles(MergeStep):
+	def __init__(self,globs=[]):
+		self.globs = globs
+	
+	def run(self,tree):
+		for glob in self.globs:
+			cmd = "rm -rf %s/%s" % ( tree.root, glob )
+			runShell(cmd)
 
 class SyncDir(MergeStep):
 	def __init__(self,srcroot,srcdir=None,destdir=None,exclude=[],delete=False):
@@ -391,12 +431,6 @@ class GitTree(Tree):
 			return self.commit
 		else:
 			return headSHA1(self.root)
-
-	def treelet_update(self, src_tree, select, skip=None):
-		steps = [
-		InsertEbuilds(src_tree, select=select, skip=skip, replace=True),
-		Minify()
-		]
 
 	def logTree(self,srctree):
 		# record name and SHA of src tree in dest tree, used for git commit message/auditing:
@@ -760,20 +794,4 @@ class Minify(MergeStep):
 		runShell("( cd %s; find -iname ChangeLog -exec rm -f {} \; )" % tree.root )
 		runShell("( cd %s; find -iname Manifest -exec sed -n -i -e \"/DIST/p\" {} \; )" % tree.root )
 
-
-
-
-#xorg treelet:
-"""
-xorg_treelet = GitWriteTree(
-
-.treelet_update(gentoo_src, select=[
-	"x11-base/*",
-	"x11-drivers/*",
-	"x11-wm/twm",
-	"x11-terms/xterm"
-])
-"""
-
-
-
+# vim: ts=4 sw=4 noet

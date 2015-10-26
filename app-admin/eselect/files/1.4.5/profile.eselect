@@ -1,0 +1,15 @@
+# -*-eselect-*-  vim: ft=eselect
+# Copyright 2015 Funtoo Solutions, Inc.
+# Distributed under the terms of the GNU General Public License v2
+# $Id: $
+
+# This is a portage-only module.
+# This version of profile.eselect is written for use with Funtoo's
+# multi-profile approach
+
+DESCRIPTION="Manage portage profiles"
+MAINTAINER="drobbins@funtoo.org"
+VERSION="funtoo-2.0"
+
+echo "Eselect profile has been replaced with the 'epro' command. Please use it instead."
+exit 1

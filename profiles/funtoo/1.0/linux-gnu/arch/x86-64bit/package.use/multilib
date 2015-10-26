@@ -6,3 +6,6 @@ media-sound/apulse abi_x86_32
 
 # FL-1885, binary package with likely wanted 32-bit counterpart
 x11-drivers/ati-drivers abi_x86_32
+
+# For binutils-libs, required by GNOME and other desktop things
+sys-libs/binutils-libs abi_x86_32
