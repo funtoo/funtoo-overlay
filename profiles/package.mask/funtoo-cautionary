@@ -8,8 +8,8 @@
 # FL-2726: mask kdelibs-4.14.11 in Funtoo too
 =kde-base/kdelibs-4.14.11
 
-# FL-2704: mask very latet mongodb (and newer), until boost also unmasked.
->dev-db/mongodb-3.0.4
+# QA-88: workaround mask of binutils-config-4-r4 to break block with eselect. Until decided.
+>=sys-devel/binutils-config-4-r4
 
 # FL-2678: mask xbmc. kodi is a new and working version.
 # Users with installed version and not planning to update xbmc need to put this entry to package.unmask
@@ -39,9 +39,6 @@ sys-apps/makedev
 # FL-1703: these versions of crossdev is a forkbomb(s)
 >=sys-devel/crossdev-20140917
 
-# Mask the very latest layman, which using a a portage repository configs. Not yet in Funtoo.
->app-portage/layman-2.2.0-r7
-
 # FL-2020, FL-2015, mask very latest libevent, breaks packages.
 >dev-libs/libevent-2.0.22
 
@@ -49,8 +46,6 @@ sys-apps/makedev
 # Cautionary mask dev-lang/swig-3.0.3, failures reported.
 >dev-lang/swig-3.0.2
 
-# Protect against beta OpenRC
->=sys-apps/openrc-0.12.5
 # QA-289
 >=dev-db/mysql-init-scripts-2.1_alpha4
 

@@ -4,3 +4,5 @@ sys-apps/util-linux static-libs
 sys-fs/eudev gudev static-libs
 virtual/libudev static-libs
 x11-libs/gtk+ X
+# FL-2902:
+sys-fs/eudev rule-generator

@@ -1,10 +1,10 @@
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="4-python"
+EAPI="5"
 
-PYTHON_MULTIPLE_ABIS="1"
-PYTHON_RESTRICTED_ABIS="2.5 3.1 *-jython *-pypy-*"
-inherit multilib python
+PYTHON_COMPAT=( python2_7 python3_3 )
+
+inherit multilib python-single-r1
 
 DESCRIPTION="Funtoo Core Boot Framework for global boot loader configuration"
 HOMEPAGE="http://www.funtoo.org/Package:Boot-Update"
@@ -19,23 +19,21 @@ SRC_URI="https://www.github.com/${GITHUB_USER}/${GITHUB_REPO}/tarball/${GITHUB_T
 
 IUSE=""
 
-DEPEND=""
-RDEPEND=">=sys-boot/grub-2.00-r5[binfont]"
+DEPEND="${PYTHON_DEPS}"
+RDEPEND="${DEPEND} >=sys-boot/grub-2.00-r5[binfont]"
+REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 
 src_unpack() {
 	unpack ${A}
 	mv "${WORKDIR}/${GITHUB_USER}-${PN}"-??????? "${S}" || die
 }
 
-install_into_site_packages() {
+src_install() {
 	insinto $(python_get_sitedir)
 	cd ${S}/python/modules
 	doins -r .
-}
 
-src_install() {
-	python_execute_function install_into_site_packages
-
+	cd ${S}
 	dodoc doc/*.rst
 
 	doman doc/boot-update.8
@@ -43,7 +41,7 @@ src_install() {
 
 	into /
 	dosbin sbin/boot-update
-
+	sed -i -e "1 s:^.*$:#!${PYTHON}:" -e "s:^version = .*$:version = \"${PV}\":" ${D}/sbin/boot-update
 	dodoc etc/boot.conf.example
 	insinto /etc
 	doins etc/boot.conf

@@ -1,0 +1,393 @@
+#!/sbin/runscript
+# Copyright 1999-2005 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: /var/www/viewcvs.gentoo.org/raw_cvs/gentoo-x86/sys-cluster/vzctl/files/vz-3.0.10.initd,v 1.2 2006/07/09 10:29:24 phreak Exp $
+
+depend() {
+	after net vzeventd
+}
+
+check_config() {
+	# if we don't want openvz running, say so
+	[ "${VIRTUOZZO}" = "yes" ] || return 1
+
+	# set default values
+	: ${VZCTL:=/usr/sbin/vzctl}
+	: ${VZQUOTA:=/usr/sbin/vzquota}
+	: ${VZVEINFO:=/proc/vz/veinfo}
+	: ${VESTAT:=/proc/vz/vestat}
+	: ${VPSCONFDIR:=/etc/vz/conf}
+	: ${VZREBOOTDIR:=/var/lib/vzctl/vzreboot}
+	: ${VZDEV:=venet0}
+	: ${VZCONF:=/etc/vz/vz.conf}
+	: ${VE_STOP_MODE:=suspend}
+
+	if [ "${MODULES_DISABLED}" != "yes" ]; then
+		: ${IPTABLES_MODULES:="${IPTABLES}"}
+		IPTABLES_MODULES="ip_tables ${IPTABLES_MODULES} xt_tcpudp"
+		: ${PRELOAD_MODULES:="af_packet"}
+		: ${MODULES:="vzmon vzdquota vzdev"}
+		: ${MIGRATE_MODULES:="vzcpt vzrst"}
+		: ${NET_MODULES:="vznetdev vznet vzethdev"}
+		: ${PLOOP_MODULES:="ploop pfmt_ploop1 pfmt_raw pio_direct pio_nfs pio_kaio"}
+		: ${MISC_MODULES:="vziolimit"}
+
+		# check if you should load vzwdog module
+		[ "${VZWDOG}" = "yes" ] && MODULES="${MODULES} vzwdog"
+	fi
+
+	# we need a working vzctl
+	if [ ! -x "${VZCTL}" ]; then
+		eerror "vzctl missing (${VZCTL})"
+		return 1
+	fi
+
+	if [ -z "${VE0CPUUNITS}" ]; then
+		ewarn "VE0CPUUNITS is not set in /etc/conf.d/vz; using default value of 1000"
+		VE0CPUUNITS=1000
+	fi
+	return 0
+}
+
+mount_cgroups()
+{
+	local g
+	for g in beancounter container fairsched ; do
+		if [ -d /proc/vz/$g ]; then
+			mount -t cgroup $g /proc/vz/$g -o name=$g 2>/dev/null
+		fi
+	done
+}
+
+umount_cgroups()
+{
+	local g
+	for g in beancounter container fairsched ; do
+		umount /proc/vz/$g 2>/dev/null
+	done
+}
+
+setup_ve0() {
+	local msg ve0conf="${VPSCONFDIR}/0.conf"
+
+	mount_cgroups
+
+	msg=$(${VZCTL} set 0 --cpuunits ${VE0CPUUNITS} 2>&1)
+	[ $? -ne 0 ] && ewarn "vzctl set 0 --cpuunits ${VE0CPUUNITS} failed: ${msg}"
+
+	test -f ${ve0conf} || return
+	egrep -q '^ONBOOT=yes\|^ONBOOT=\"yes\"' ${ve0conf} || return
+
+	ebegin "Configuring hardware node UB resources"
+	msg=$(${VZCTL} set 0 --reset_ub 2>&1)
+	eend $? ${msg}
+}
+
+start_net() {
+	local mod
+
+	# load necessary modules
+	for mod in ${NET_MODULES}; do
+		modprobe ${mod} 2>/dev/null
+	done
+
+	if [ ! -f ${VZVEINFO} ]; then
+		return 0
+	fi
+
+	# we don't operate on a running interface
+	if ip addr list | grep -q "venet0:.*UP" 2>/dev/null; then
+		return 0
+	fi
+
+	# configure the device
+	ebegin "Bringing up interface ${VZDEV}"
+		ip link set ${VZDEV} up
+	eend $?
+
+	ip addr add 0.0.0.0/0 dev ${VZDEV}
+
+	ebegin "Configuring interface ${VZDEV}"
+		sysctl -q -w net.ipv4.conf.${VZDEV}.send_redirects=0
+	eend $?
+
+	if [ "x$(sysctl -n -e net.ipv4.ip_forward)" != "x1" ]; then
+		ewarn "IP forwarding off. OpenVZ venet will not function (veth is OK.)"
+	fi
+}
+
+stop_net() {
+	local mod
+
+	if ip addr list | grep -q "venet0:.*UP" 2>/dev/null; then
+		ebegin "Bringing down interface ${VZDEV}"
+			ip link set ${VZDEV} down 2>/dev/null
+		eend $?
+	fi
+
+	# remove all modules we probably loaded on start_net
+	for mod in ${NET_MODULES}; do
+		modprobe -r ${mod} > /dev/null 2>&1
+	done
+}
+
+start_ve() {
+	local veid velist msg iter=0 pid pids need_restart=""
+
+	# CTs that were running before a reboot
+	velist=$(ls $VZREBOOTDIR)
+	rm -f $VZREBOOTDIR/*
+	# ... and not have ONBOOT=no
+	test -n "$velist" && velist=$(vzlist -aH -octid,onboot $velist |
+			awk '$2 != "no" {print $1}')
+	# ... plus ones with ONBOOT=yes
+	velist=$(echo "$velist"; vzlist -aH -octid,onboot |
+			awk '$2 == "yes" {print $1}')
+	# Then sort by bootorder
+	test -n "$velist" && velist=$(vzlist -aH -octid -s-bootorder $velist)
+
+	sysctl -q -w net.ipv4.route.src_check=0
+
+	for veid in ${velist}; do
+		if [ "${VZFASTBOOT}" = "yes" -a "${DISK_QUOTA}" = "yes" ]; then
+			${VZQUOTA} stat ${veid} >/dev/null 2>&1
+			if [ $? -eq 6 ]; then
+				if ${VZQUOTA} show ${veid} 2>&1 | grep "vzquota : (warning) Quota is running" >/dev/null 2>&1; then
+					${VZQUOTA} on ${veid} --nocheck >/dev/null 2>&1
+					need_restart="${need_restart} ${veid}"
+				fi
+			fi
+		fi
+		${VZCTL} start ${veid} --skip-fsck 2>&1 &
+		pid=$!
+		eval VE_${pid}=${veid}
+		pids="${pids} $pid"
+		let iter++
+		if [ ${iter} -ge ${VE_PARALLEL} ]; then
+			for pid in ${pids}; do
+				veid=`eval echo \\$VE_${pid}`
+				unset VE_${pid}
+				ebegin "Starting CT $veid"
+				wait ${pid}
+				eend $?
+			done
+			pids=
+			iter=0
+		fi
+	done
+
+	for pid in ${pids}; do
+		veid=`eval echo \\$VE_${pid}`
+		unset VE_${pid}
+		ebegin "Starting CT $veid"
+		wait ${pid}
+		eend $?
+	done
+
+	for veid in ${need_restart}; do
+		ebegin "Stopping CT ${veid}"
+		msg=$(${VZCTL} stop ${veid})
+		eend $? "${msg}"
+
+		ebegin "Starting CT ${veid}"
+		msg=$($VZCTL start ${veid} 2>&1)
+		eend $? "${msg}"
+	done
+
+	# we're ok even if some CTs failed to start
+	return 0
+}
+
+get_parallel()
+{
+	[ -n "${VE_PARALLEL}" -a "${VE_PARALLEL}" != "0" ] && return
+	VE_PARALLEL=`awk '
+BEGIN { num=0; }
+$1 == "processor" { num++; }
+END { print num * 4; }' /proc/cpuinfo`
+}
+
+stop_ve() {
+	local veid velist i iter pid pids stage stages msg
+
+	if [ ! -f ${VESTAT} ]; then
+		return
+	fi
+
+	# Pre-stop stage
+	rm -f $VZREBOOTDIR/*
+	velist=$(vzlist -1 2>/dev/null)
+	for veid in $velist; do
+		# Equalize cpuunits for all CTs
+		$VZCTL set $veid --cpuunits 2000 >/dev/null 2>&1
+		# Save to vzreboot list
+		touch $VZREBOOTDIR/$veid
+	done
+	get_parallel
+	stages="stop"
+	[ "$VE_STOP_MODE" = "suspend" ] && stages="suspend stop"
+	for stage in $stages; do
+		case $stage in
+			suspend)
+				msg='Suspending CT'
+				;;
+			stop)
+				msg='Shutting down CT'
+				;;
+		esac
+		for ((i = 0; i <= 2; i++)); do
+			iter=0
+			pids=
+			velist=$(vzlist -H -o ctid -sbootorder 2>/dev/null)
+			for veid in ${velist}; do
+				if [ "$stage" = "stop" ]; then
+					# Unset limits for CT to stop fast
+					$VZCTL set $veid --cpulimit 0 --iolimit 0 --iopslimit 0 >/dev/null 2>&1
+				fi
+				${VZCTL} --skiplock $stage ${veid} >/dev/null 2>&1 &
+				pid=$!
+				eval VE_${pid}=${veid}
+				pids="${pids} $pid"
+				let iter++
+				if [ ${iter} -ge ${VE_PARALLEL} ]; then
+					for pid in ${pids}; do
+						veid=`eval echo \\$VE_${pid}`
+						unset VE_${pid}
+						ebegin "$msg $veid"
+						wait ${pid}
+						eend $?
+					done
+					pids=
+					iter=0
+				fi
+			done
+
+			for pid in ${pids}; do
+				veid=`eval echo \\$VE_${pid}`
+				unset VE_${pid}
+				ebegin "$msg $veid"
+				wait ${pid}
+				eend $?
+			done
+		done
+	done
+}
+
+umount_ve() {
+	local iter=0
+	local fail=1
+	local m mounts msg quota
+
+	while [ ${iter} -lt 5 -a ${fail} -ne 0 ]; do
+		fail=0
+		mounts=$(awk '{if ($3=="simfs") print $2}' /proc/mounts)
+
+		for m in ${mounts}; do
+			ebegin "Unmounting CT area ${m}"
+			msg=$(umount ${m} 2>&1)
+			eend $? "${msg}"
+			if [ $? -ne 0 ]; then
+				let fail++
+				fuser -k -m ${m} > /dev/null 2>&1
+			fi
+		done
+
+		let iter++
+	done
+
+	# turn quota off
+	quota=$(awk -F: '/^[0-9]+:/{print $1}' /proc/vz/vzquota 2>/dev/null)
+
+	for m in ${quota}; do
+		ebegin "Turning quota off for CT ${m}"
+		msg=$(vzquota off ${m} 2>&1)
+		eend $? "${msg}"
+	done
+}
+
+start() {
+	check_config || return
+
+	local mod rc
+
+	ebegin "Loading OpenVZ modules"
+	for mod in ${IPTABLES_MODULES}; do
+		modprobe ${mod} >/dev/null 2>&1
+	done
+
+	for mod in ${PRELOAD_MODULES}; do
+		modprobe -r ${mod} >/dev/null 2>&1
+		modprobe ${mod} >/dev/null 2>&1
+	done
+
+	for mod in ${MODULES}; do
+		modprobe ${mod} >/dev/null 2>&1
+		rc=$?
+		if [ ${rc} -ne 0 ]; then
+			eend ${rc} "failed to load module ${mod}"
+			return ${rc}
+		fi
+	done
+
+	for mod in ${MIGRATE_MODULES} ${PLOOP_MODULES} ${MISC_MODULES}; do
+		modprobe ${mod} >/dev/null 2>&1
+	done
+	eend
+
+	if [ ! -e /dev/vzctl ]; then
+		eerror "Missing device node /dev/vzctl"
+		einfo
+		einfo "Please create the vzctl device node using the following command:"
+		einfo "   /bin/mknod /dev/vzctl c 126 0"
+		einfo
+		return 1
+	fi
+
+	if [ -f /proc/vz/oom_score_adj ]; then
+		ebegin "Applying OOM adjustments"
+		cat /etc/vz/oom-groups.conf > /proc/vz/oom_score_adj
+		eend $?
+	fi
+
+	start_net
+	setup_ve0
+	start_ve
+	# Try to run vzstats to submit new kernel info
+	vzstats >/dev/null 2>&1 &
+}
+
+stop() {
+	check_config || return
+
+	# Avoid stop action inside a CT, check we are in CT0
+	if test -r /proc/user_beancounters; then
+		if ! egrep -q '^[[:space:]]*0:[[:space:]]' \
+				/proc/user_beancounters; then
+			eerror "Looks like we are inside a container!"
+			return 1
+		fi
+	fi
+
+	local mod
+
+	stop_ve
+	umount_ve
+	umount_cgroups
+	stop_net
+
+	for mod in ${MIGRATE_MODULES} ${PLOOP_MODULES} ${MISC_MODULES}; do
+		modprobe -r ${mod} > /dev/null 2>&1
+	done
+
+	for mod in ${MODULES}; do
+		modprobe -r ${mod} > /dev/null 2>&1
+	done
+
+	for mod in ${PRELOAD_MODULES}; do
+		modprobe -r ${mod} > /dev/null 2>&1
+	done
+
+	# Even if some modules failed to unload (say they were not loaded)
+	# we return 0 for the service to be marked as stopped.
+	return 0
+}

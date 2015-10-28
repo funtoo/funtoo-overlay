@@ -390,6 +390,10 @@ class GitTree(Tree):
 		if self.commit:
 			runShell("(cd %s; git checkout %s)" % ( self.root, self.commit ))
 
+	def gitCheckout(self,branch="master"):
+		self.branch = branch
+		runShell("(cd %s; git checkout %s)" % ( self.root, self.branch ))
+
 	def gitCommit(self,message="",upstream="origin",branch=None):
 		if branch == None:
 			branch = self.branch
@@ -564,13 +568,17 @@ class InsertEbuilds(MergeStep):
 	
 	
 	"""
-	def __init__(self,srctree,select="all",skip=None,replace=False,merge=None,categories=None,ebuildloc=None):
+	def __init__(self,srctree,select="all",skip=None,replace=False,merge=None,categories=None,ebuildloc=None,branch=None):
 		self.select = select
 		self.skip = skip
 		self.srctree = srctree
 		self.replace = replace
 		self.merge = merge
 		self.categories = categories
+
+		if branch != None:
+			# Allow dynamic switching to different branches/commits to grab things we want:
+			self.srctree.gitCheckout(branch)
 
 		# ebuildloc is the path to the tree relative to srctree.root.
 		# This is for overlays where the tree is not located at root of overlay. Use wth VarLocTree

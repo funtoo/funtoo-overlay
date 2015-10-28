@@ -5,11 +5,9 @@ import sys
 from merge_utils import *
 
 flags = {
-	"progress" : True,
 	"old-gnome" : True
 }
 
-del flags["progress"]
 del flags["old-gnome"]
 xml_out = etree.Element("packages")
 funtoo_staging_w = GitTree("funtoo-staging", "master", "repos@localhost:ports/funtoo-staging.git", root="/var/git/dest-trees/funtoo-staging", pull=False, xml_out=xml_out)
@@ -42,7 +40,7 @@ shards = {
 	"perl" : GitTree("gentoo-perl-shard", "faa495e899e073e307950749f2929dd88be61118", "repos@localhost:gentoo-perl-shard.git", pull=True),
 	"kde" : GitTree("gentoo-kde-shard", "f9c2e474dfaaede1e64d8d348a32ba3f8a5b354d", "repos@localhost:gentoo-kde-shard.git", pull=True),
 	"gnome" : GitTree("gentoo-gnome-shard", "4d5473019d599229cb54edde7f5a7e48df46302f", "repos@localhost:ports/gentoo-gnome-shard.git", pull=True),
-	"x11" : GitTree("gentoo-x11-shard", "45015a08a5a47940f57cc0df1501f607de537847", "repos@localhost:ports/gentoo-x11-shard.git", pull=True),
+	"x11" : GitTree("gentoo-x11-shard", "ea2b8b9f5250e4fd941443f2783073db7617ed95", "repos@localhost:ports/gentoo-x11-shard.git", pull=True),
 	"core" : GitTree("gentoo-core-shard", "62af1de1113dc46599807f745788d248dd524d33", "repos@localhost:gentoo-core-shard.git", pull=True)
 }
 
@@ -58,7 +56,6 @@ funtoo_overlays = {
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
 	"funtoo-tengine" : GitTree("funtoo-tengine", "master", "https://github.com/damex/funtoo-tengine.git", pull=True),
 }
-funtoo_overlays["progress_overlay"] = GitTree("progress", "funtoo", "repos@localhost:progress.git", pull=True)
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
 # of these when we regenerate our tree.
@@ -139,16 +136,6 @@ profile_steps = [
 		"profiles/package.mask":"profiles/package.mask/wmfs-mask"
 	}) ]
 
-if "progress" in flags:
-	profile_steps += [
-		SyncDir(funtoo_overlays["progress_overlay"].root, "profiles/unpack_dependencies"),
-		SyncFiles(funtoo_overlays["progress_overlay"].root, {
-			"profiles/package.mask":"profiles/package.mask/progress",
-			"profiles/use.aliases":"profiles/use.aliases/progress",
-			"profiles/use.mask":"profiles/use.mask/progress"
-		}),
-	]
-
 if "old-gnome" in flags:
 	profile_steps += [ 
 		SyncFiles(funtoo_overlays["funtoo_gnome"].root, {
@@ -198,9 +185,6 @@ ebuild_modifications = [
 	InsertEbuilds(funtoo_overlays["funtoo-tengine"], select=["www-plugins/*", "www-servers/*"], skip=None, replace=True),
 ]
 
-if "progress" in flags:
-	ebuild_modifications += [ InsertEbuilds(funtoo_overlays["progress_overlay"], select="all", skip=["dev-libs/icu", "kde-base/pykde4"], replace=True, merge=False) ]
-
 if "old-gnome" in flags:
 	ebuild_modifications += [
 		InsertEbuilds(funtoo_overlays["funtoo_gnome"], select="all", skip=None, replace=True, merge=["dev-python/pyatspi", "dev-python/pygobject", "dev-util/gdbus-codegen", "x11-libs/vte"]),
@@ -237,11 +221,6 @@ treeprep_steps = [
 	SyncDir(funtoo_overlays["plex_overlay"].root,"licenses"),
 ]
 
-if "progress" in flags:
-	treeprep_steps += [
-		MergeUpdates(funtoo_overlays["progress_overlay"].root),
-	]
-
 master_steps = [
 	InsertEbuilds(shards["perl"], select="all", skip=None, replace=True),
 	InsertEclasses(shards["perl"], select=re.compile(".*\.eclass")),
@@ -250,11 +229,10 @@ master_steps = [
 	InsertEclasses(shards["kde"], select=re.compile(".*\.eclass")),
 	InsertEbuilds(shards["core"], select="all", skip=None, replace=True),
 	InsertEclasses(shards["core"], select=re.compile(".*\.eclass")),
+	InsertEbuilds(shards["core"], select=["sys-fs/eudev"], skip=None, replace=True, branch="059e0dbad40402174ce84ed69a3ee4f8d2d5fe41"),
 	InsertEbuilds(funtoo_overlays["funtoo_toolchain"], select="all", skip=None, replace=True, merge=False),
 	InsertEbuilds(funtoo_overlay, select="all", skip=["sys-fs/eudev"], replace=True),
 	InsertEbuilds(funtoo_overlay, select=["sys-fs/eudev"], skip=None, replace=True, merge=True),
-	# for now, unconditionally use progress eclasses for compatibility.
-	SyncDir(funtoo_overlays["progress_overlay"].root, "eclass"),
 	SyncDir(funtoo_overlay.root, "eclass"),
 	SyncDir(funtoo_overlay.root,"licenses"),
 	SyncDir(funtoo_overlay.root,"metadata"),

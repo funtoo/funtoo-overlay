@@ -1,9 +1,6 @@
 # Keep the most recent masks in a reverse chrono order
 # newest on top
 
-# FL-2849: masked for testing
-=sys-kernel/openvz-rhel6-stable-2.6.32.042.111.12*
-
 # FL-2401: pulseaudio-6 update. Masked for testing
 =media-sound/pulseaudio-6.0
 

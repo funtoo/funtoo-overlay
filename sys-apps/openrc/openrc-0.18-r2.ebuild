@@ -43,7 +43,7 @@ DEPEND="${COMMON_DEPEND}
 	virtual/os-headers
 	ncurses? ( virtual/pkgconfig )"
 RDEPEND="${COMMON_DEPEND}
-	sys-apps/corenetwork
+	>=sys-apps/corenetwork-1.5.4
 	!prefix? (
 		kernel_linux? ( || ( >=sys-apps/sysvinit-2.86-r6 sys-process/runit ) )
 		kernel_FreeBSD? ( sys-freebsd/freebsd-sbin )
@@ -89,7 +89,7 @@ src_compile() {
 		MAKE_ARGS="${MAKE_ARGS} OS=FreeBSD"
 		brand="FreeBSD"
 	fi
-	export BRANDING="Gentoo ${brand}"
+	export BRANDING="Funtoo ${brand}"
 	use prefix && MAKE_ARGS="${MAKE_ARGS} MKPREFIX=yes PREFIX=${EPREFIX}"
 	export DEBUG=$(usev debug)
 	export MKTERMCAP=$(usev ncurses)
@@ -164,113 +164,40 @@ src_install() {
 	newins "$FILESDIR/hostname.confd" hostname
 }
 
-add_boot_init() {
-	local initd=$1
-	local runlevel=${2:-boot}
-	# if the initscript is not going to be installed and is not
-	# currently installed, return
-	[[ -e "${ED}"/etc/init.d/${initd} || -e "${EROOT}"etc/init.d/${initd} ]] \
-		|| return
-	[[ -e "${EROOT}"etc/runlevels/${runlevel}/${initd} ]] && return
-
-	# if runlevels dont exist just yet, then create it but still flag
-	# to pkg_postinst that it needs real setup #277323
-	if [[ ! -d "${EROOT}"etc/runlevels/${runlevel} ]] ; then
-		mkdir -p "${EROOT}"etc/runlevels/${runlevel}
-		touch "${EROOT}"etc/runlevels/.add_boot_init.created
-	fi
-
-	elog "Auto-adding '${initd}' service to your ${runlevel} runlevel"
-	ln -snf /etc/init.d/${initd} "${EROOT}"etc/runlevels/${runlevel}/${initd}
-}
-add_boot_init_mit_config() {
-	local config=$1 initd=$2
-	if [[ -e ${EROOT}${config} ]] ; then
-		if [[ -n $(sed -e 's:#.*::' -e '/^[[:space:]]*$/d' "${EROOT}"${config}) ]] ; then
-			add_boot_init ${initd}
-		fi
-	fi
-}
-
 pkg_preinst() {
 	local f LIBDIR=$(get_libdir)
 
 	# set default interactive shell to sulogin if it exists
 	set_config /etc/rc.conf rc_shell /sbin/sulogin "#" test -e /sbin/sulogin
-
-	# termencoding was added in 0.2.1 and needed in boot
-	has_version ">=sys-apps/openrc-0.2.1" || add_boot_init termencoding
-
-	# swapfiles was added in 0.9.9 and needed in boot (february 2012)
-	has_version ">=sys-apps/openrc-0.9.9" || add_boot_init swapfiles
-
-	if ! has_version ">=sys-apps/openrc-0.11"; then
-		add_boot_init sysfs sysinit
-	fi
-
-	if ! has_version ">=sys-apps/openrc-0.11.3" ; then
-		migrate_udev_mount_script
-		add_boot_init tmpfiles.setup boot
-	fi
-
-	# these were added in 0.12.
-	if ! has_version ">=sys-apps/openrc-0.12"; then
-		add_boot_init loopback
-		add_boot_init tmpfiles.dev sysinit
-
-		# ensure existing /etc/conf.d/net is not removed
-		# undoes the hack to get around CONFIG_PROTECT in openrc-0.11.8 and earlier
-		# this needs to stay in openrc ebuilds for a long time. :(
-		# Added in 0.12.
-		if [[ -f "${EROOT}"etc/conf.d/net ]]; then
-			einfo "Modifying conf.d/net to keep it from being removed"
-			cat <<-EOF >>"${EROOT}"etc/conf.d/net
-
-# The network scripts are now part of net-misc/netifrc
-# In order to avoid sys-apps/${P} from removing this file, this comment was
-# added; you can safely remove this comment.  Please see
-# /usr/share/doc/netifrc*/README* for more information.
-EOF
-		fi
-	fi
-	has_version ">=sys-apps/openrc-0.14" || add_boot_init binfmt
-}
-
-# >=OpenRC-0.11.3 requires udev-mount to be in the sysinit runlevel with udev.
-migrate_udev_mount_script() {
-	if [ -e "${EROOT}"etc/runlevels/sysinit/udev -a \
-		! -e "${EROOT}"etc/runlevels/sysinit/udev-mount ]; then
-		add_boot_init udev-mount sysinit
-	fi
-	return 0
 }
 
 pkg_postinst() {
 	local LIBDIR=$(get_libdir)
 
-	# Make our runlevels if they don't exist
-	if [[ ! -e "${EROOT}"etc/runlevels ]] || [[ -e "${EROOT}"etc/runlevels/.add_boot_init.created ]] ; then
-		einfo "Copying across default runlevels"
-		cp -RPp "${EROOT}"usr/share/${PN}/runlevels "${EROOT}"etc
-		rm -f "${EROOT}"etc/runlevels/.add_boot_init.created
-	else
-		if [[ ! -e "${EROOT}"etc/runlevels/sysinit/devfs ]] ; then
-			mkdir -p "${EROOT}"etc/runlevels/sysinit
-			cp -RPp "${EROOT}"usr/share/${PN}/runlevels/sysinit/* \
-				"${EROOT}"etc/runlevels/sysinit
-		fi
-		if [[ ! -e "${EROOT}"etc/runlevels/shutdown/mount-ro ]] ; then
-			mkdir -p "${EROOT}"etc/runlevels/shutdown
-			cp -RPp "${EROOT}"usr/share/${PN}/runlevels/shutdown/* \
-				"${EROOT}"etc/runlevels/shutdown
-		fi
-	fi
-
-	if use hppa; then
-		elog "Setting the console font does not work on all HPPA consoles."
-		elog "You can still enable it by running:"
-		elog "# rc-update add consolefont boot"
-	fi
+	echo
+	for r in sysinit boot shutdown; do
+		# install missing scripts
+		for sc in $(cd ${EROOT}/usr/share/openrc/runlevels/$r; ls); do
+			if [ ! -L ${EROOT}/etc/runlevels/$r/$sc ]; then
+				einfo "Missing $r/$sc script, installing..."
+				cp -a ${EROOT}/usr/share/openrc/runlevels/$r/$sc ${EROOT}/etc/runlevels/$r/$sc
+			fi
+		done
+		# warn about extra scripts
+		for sc in $(cd ${EROOT}/etc/runlevels/$r; ls); do
+			if [ "$sc" == "netif.lo" ]; then
+				einfo "Removing old initscript netif.lo."
+				rm ${EROOT}/etc/runlevels/$r/$sc
+			elif [ ! -e ${EROOT}/etc/runlevels/$r/$sc ]; then
+				einfo "Removing broken symlink for initscript in runlevel $r/$sc"
+				rm ${EROOT}/etc/runlevels/$r/$sc
+			fi
+			if [ ! -L ${EROOT}/usr/share/openrc/runlevels/$r/$sc ]; then
+				ewarn "Extra script $r/$sc found, possibly from other ebuild."
+			fi
+		done
+	done
+	echo
 
 	# Handle the conf.d/local.{start,stop} -> local.d transition
 	if path_exists -o "${EROOT}"etc/conf.d/local.{start,stop} ; then
@@ -291,18 +218,8 @@ pkg_postinst() {
 	# update the dependency tree after touching all files #224171
 	[[ "${EROOT}" = "/" ]] && "${EROOT}/${LIBDIR}"/rc/bin/rc-depend -u
 
-	ewarn "In this version of OpenRC, the loopback interface no longer"
-	ewarn "satisfies the net virtual."
-	ewarn "If you have services now which do not start because of this,"
-	ewarn "They can be fixed by adding rc_need=\"!net\""
-	ewarn "to the ${EROOT}etc/conf.d/<servicename> file."
-	ewarn "You should also file a bug against the service asking that"
-	ewarn "need net be dropped from the dependencies."
-	ewarn "The bug you file should block the following tracker:"
-	ewarn "https://bugs.gentoo.org/show_bug.cgi?id=439092"
-	ewarn
-
 	# Updated for 0.13.2.
+	echo
 	ewarn "Bug https://bugs.gentoo.org/show_bug.cgi?id=427996 was not"
 	ewarn "fixed correctly in earlier versions of OpenRC."
 	ewarn "The correct fix is implemented in this version, but that"
