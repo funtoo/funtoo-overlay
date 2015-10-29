@@ -8,9 +8,6 @@
 # FL-2726: mask kdelibs-4.14.11 in Funtoo too
 =kde-base/kdelibs-4.14.11
 
-# QA-88: workaround mask of binutils-config-4-r4 to break block with eselect. Until decided.
->=sys-devel/binutils-config-4-r4
-
 # FL-2678: mask xbmc. kodi is a new and working version.
 # Users with installed version and not planning to update xbmc need to put this entry to package.unmask
 media-tv/xbmc
