@@ -1,3 +1,0 @@
->=sys-fs/eudev-1.5.4
->=virtual/udev-217
-sys-fs/udev
