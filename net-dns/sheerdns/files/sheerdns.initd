@@ -1,0 +1,12 @@
+#!/sbin/runscript
+
+command=/usr/sbin/sheerdns
+command_args="$SHEERDNS_OPTS"
+start_stop_daemon_args="-b --pidfile /run/sheerdns.pid --make-pidfile"
+name="SheerDNS"
+
+depend()
+{
+	provide dns
+	need net
+}

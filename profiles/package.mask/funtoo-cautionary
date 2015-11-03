@@ -1,10 +1,6 @@
 # precautionary mask as newer versions appear to break GNOME 3 and other DE's
 >sys-auth/consolekit-0.4.6
 
-# FL-2770: breaks mesa 10.5.2 - will be okay circa mesa 11
->=sys-devel/llvm-3.7
->=sys-devel/clang-3.7
-
 # FL-2726: mask kdelibs-4.14.11 in Funtoo too
 =kde-base/kdelibs-4.14.11
 

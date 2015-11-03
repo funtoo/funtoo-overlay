@@ -1,0 +1,20 @@
+diff -urN sheerdns-old/hash.c sheerdns/hash.c
+--- sheerdns-old/hash.c	2003-04-12 02:04:59.000000000 -0600
++++ sheerdns/hash.c	2015-11-02 13:14:49.020499787 -0700
+@@ -3,6 +3,7 @@
+ #include <unistd.h>
+ #include <assert.h>
+ #include <string.h>
++#include <sys/stat.h>
+ #include <time.h>
+ #include "hash.h"
+ #include "dir.h"
+@@ -25,7 +26,7 @@
+ 	unsigned char *s;
+ 	s = (unsigned char *) hex_hash ((unsigned char *) argv[1]);
+ 	snprintf (buf, sizeof (buf), SHEERDNS_DIR "/%s/%s", s, argv[1]);
+-	mkdir (buf);
++	mkdir (buf, 0700);
+ 	l = strlen ((char *) s);
+ 	write (1, s, l);
+ 	write (1, "\n", 1); }
