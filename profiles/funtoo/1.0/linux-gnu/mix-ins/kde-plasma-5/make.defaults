@@ -1,0 +1,1 @@
+USE="consolekit declarative fontconfig introspection kde kipi lzma nls phonon plasma policykit qml qt3support qt4 qt5 sdl semantic-desktop widgets xcomposite xinerama xscreensaver"
