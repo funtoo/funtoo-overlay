@@ -77,7 +77,7 @@ src_install() {
 	insinto /etc/vz/conf
 	doins ${FILESDIR}/ve-unlimited.conf-sample
 
-	newinitd ${FILESDIR}/${PV}/vz.initd vz
+	newinitd ${FILESDIR}/${PVR}/vz.initd vz
 }
 
 # TODO - when Funtoo has an OpenRC with "condrestart", add an 
