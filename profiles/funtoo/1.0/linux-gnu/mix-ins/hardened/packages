@@ -6,3 +6,6 @@
 
 *sys-apps/paxctl
 *sys-apps/elfix
+
+# sys-kernel/hardened-sources will need dev-libs/gmp in order to build. See FL-2818.
+*dev-libs/gmp
