@@ -51,7 +51,7 @@ funtoo_overlays = {
 	"gnome_fixups" : GitTree("gnome-3.16-fixups", "master", "repos@localhost:ports/gnome-3.16-fixups.git", pull=True),
 	"funtoo_toolchain" : GitTree("funtoo-toolchain", "master", "repos@localhost:funtoo-toolchain-overlay.git", pull=True),
 	"ldap_overlay" : GitTree("funtoo-ldap", "master", "repos@localhost:funtoo-ldap-overlay.git", pull=True),
-	"funtoo_deadbeef" : GitTree("funtoo-deadbeef", "master", "https://github.com/damex/funtoo-deadbeef.git", pull=True),
+	"deadbeef_overlay" : GitTree("deadbeef-overlay", "master", "https://github.com/damex/deadbeef-overlay.git", pull=True),
 	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
 	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
 }
@@ -128,7 +128,7 @@ profile_steps = [
 		"profiles/arch/amd64/no-multilib/package.mask":"profiles/funtoo/1.0/linux-gnu/arch/pure64/package.mask/01-gentoo",
 		"profiles/arch/amd64/no-multilib/use.mask":"profiles/funtoo/1.0/linux-gnu/arch/pure64/use.mask/01-gentoo"
 	}),
-	SyncFiles(funtoo_overlays["funtoo_deadbeef"].root, {
+	SyncFiles(funtoo_overlays["deadbeef_overlay"].root, {
 		"profiles/package.mask":"profiles/package.mask/deadbeef-mask"
 	}),
 	SyncFiles(funtoo_overlays["funtoo_wmfs"].root, {
@@ -155,7 +155,7 @@ ebuild_additions = [
 	InsertEbuilds(other_overlays["bar_overlay"], select="all", skip=["app-emulation/qemu"], replace=False),
 	InsertEbuilds(other_overlays["bliss_overlay"], select="all", skip=["net-p2p/bittorrent-sync", "media-tv/plex-media-server", "app-bin/firefox", "app-bin/libreoffice"], replace=False),
 	InsertEbuilds(other_overlays["squeezebox_overlay"], select="all", skip=None, replace=False),
-	InsertEbuilds(funtoo_overlays["funtoo_deadbeef"], select="all", skip=None, replace=False),
+	InsertEbuilds(funtoo_overlays["deadbeef_overlay"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_gambas"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["funtoo_wmfs"], select="all", skip=None, replace=False),
 	]
@@ -184,7 +184,7 @@ ebuild_modifications += [
 # Steps related to eclass copying:
 
 eclass_steps = [
-		SyncDir(funtoo_overlays["funtoo_deadbeef"].root,"eclass"),
+		SyncDir(funtoo_overlays["deadbeef_overlay"].root,"eclass"),
 
 ]
 
