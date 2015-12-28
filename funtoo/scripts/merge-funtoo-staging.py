@@ -52,8 +52,8 @@ funtoo_overlays = {
 	"funtoo_toolchain" : GitTree("funtoo-toolchain", "master", "repos@localhost:funtoo-toolchain-overlay.git", pull=True),
 	"ldap_overlay" : GitTree("funtoo-ldap", "master", "repos@localhost:funtoo-ldap-overlay.git", pull=True),
 	"deadbeef_overlay" : GitTree("deadbeef-overlay", "master", "https://github.com/damex/deadbeef-overlay.git", pull=True),
-	"funtoo_gambas" : GitTree("funtoo-gambas", "master", "https://github.com/damex/funtoo-gambas.git", pull=True),
-	"funtoo_wmfs" : GitTree("funtoo-wmfs", "master", "https://github.com/damex/funtoo-wmfs.git", pull=True),
+	"gambas_overlay" : GitTree("gambas-overlay", "master", "https://github.com/damex/gambas-overlay.git", pull=True),
+	"wmfs_overlay" : GitTree("wmfs-overlay", "master", "https://github.com/damex/wmfs-overlay.git", pull=True),
 }
 
 # These are other overlays that we merge into the Funtoo tree. However, we just pull in the most recent versions
@@ -131,7 +131,7 @@ profile_steps = [
 	SyncFiles(funtoo_overlays["deadbeef_overlay"].root, {
 		"profiles/package.mask":"profiles/package.mask/deadbeef-mask"
 	}),
-	SyncFiles(funtoo_overlays["funtoo_wmfs"].root, {
+	SyncFiles(funtoo_overlays["wmfs_overlay"].root, {
 		"profiles/package.mask":"profiles/package.mask/wmfs-mask"
 	}) ]
 
@@ -156,8 +156,8 @@ ebuild_additions = [
 	InsertEbuilds(other_overlays["bliss_overlay"], select="all", skip=["net-p2p/bittorrent-sync", "media-tv/plex-media-server", "app-bin/firefox", "app-bin/libreoffice"], replace=False),
 	InsertEbuilds(other_overlays["squeezebox_overlay"], select="all", skip=None, replace=False),
 	InsertEbuilds(funtoo_overlays["deadbeef_overlay"], select="all", skip=None, replace=False),
-	InsertEbuilds(funtoo_overlays["funtoo_gambas"], select="all", skip=None, replace=False),
-	InsertEbuilds(funtoo_overlays["funtoo_wmfs"], select="all", skip=None, replace=False),
+	InsertEbuilds(funtoo_overlays["gambas_overlay"], select="all", skip=None, replace=False),
+	InsertEbuilds(funtoo_overlays["wmfs_overlay"], select="all", skip=None, replace=False),
 	]
 
 # Ebuild modifications -- these changes need to be treated more carefully as ordering can be important
