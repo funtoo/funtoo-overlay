@@ -297,7 +297,7 @@ mods[optional]="addition auth_request dav degradation flv geoip gunzip gzip_stat
 
 mods[mail]="imap pop3 smtp"
 
-IUSE="+aio +http +http2 +http-cache +pcre +poll +select	cpp_test debug google_perftools ipv6 libatomic luajit pcre-jit 	ssl threads vim-syntax"
+IUSE="+aio +http +http2 +http-cache +pcre +poll +select	cpp_test debug google_perftools ipv6 libatomic luajit pcre-jit 	ssl stream threads vim-syntax"
 
 for m in ${mods[upstream]} ; do
 	IUSE+=" +nginx_modules_http_${m}" ; done
@@ -461,6 +461,11 @@ src_configure() {
 	use pcre && nginx_configure+=" --with-pcre"
 	use pcre-jit && nginx_configure+=" --with-pcre-jit"
 	use threads && nginx_configure+=" --with-threads"
+
+	if use stream ; then
+		nginx_configure+=" --with-stream" && \
+		use ssl && nginx_configure+=" --with-stream_ssl_module"
+	fi
 
 	for m in ${mods[upstream]}; do
 		use nginx_modules_http_${m} && \
