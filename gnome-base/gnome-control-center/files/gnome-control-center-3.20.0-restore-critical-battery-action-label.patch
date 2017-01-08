@@ -1,0 +1,188 @@
+diff '--exclude=.git' -urN a/panels/power/cc-power-panel.c b/panels/power/cc-power-panel.c
+--- a/panels/power/cc-power-panel.c	2016-02-25 09:32:24.000000000 -0500
++++ b/panels/power/cc-power-panel.c	2016-04-04 02:26:21.020013300 -0400
+@@ -92,6 +92,8 @@
+ 
+   GtkWidget     *automatic_suspend_row;
+   GtkWidget     *automatic_suspend_label;
++  GtkWidget     *critical_battery_row;
++  GtkWidget     *critical_battery_combo;
+ 
+   GDBusProxy    *bt_rfkill;
+   GDBusProxy    *bt_properties;
+@@ -1155,6 +1157,30 @@
+ }
+ 
+ static void
++combo_enum_changed_cb (GtkWidget *widget, CcPowerPanel *self)
++{
++  GtkTreeIter iter;
++  GtkTreeModel *model;
++  gint value;
++  gboolean ret;
++  const gchar *key = (const gchar *)g_object_get_data (G_OBJECT(widget), "_gsettings_key");
++
++  /* no selection */
++  ret = gtk_combo_box_get_active_iter (GTK_COMBO_BOX(widget), &iter);
++  if (!ret)
++    return;
++
++  /* get entry */
++  model = gtk_combo_box_get_model (GTK_COMBO_BOX(widget));
++  gtk_tree_model_get (model, &iter,
++                      1, &value,
++                      -1);
++
++  /* set both battery and ac keys */
++  g_settings_set_enum (self->priv->gsd_settings, key, value);
++}
++
++static void
+ set_value_for_combo (GtkComboBox *combo_box, gint value)
+ {
+   GtkTreeIter iter;
+@@ -1217,6 +1243,8 @@
+ 
+   self->priv->has_batteries = has_batteries;
+ 
++  gtk_widget_set_visible (self->priv->critical_battery_row, has_batteries);
++
+   if (!has_batteries)
+     {
+       gtk_widget_hide (WID (self->priv->builder, "suspend_on_battery_switch"));
+@@ -1948,6 +1976,15 @@
+                              const char   *key,
+                              CcPowerPanel *self)
+ {
++  CcPowerPanelPrivate *priv = self->priv;
++  gint value;
++
++  if (g_strcmp0 (key, "critical-battery-action") == 0 &&
++      priv->critical_battery_combo != NULL)
++    {
++      value = g_settings_get_enum (settings, "critical-battery-action");
++      set_value_for_combo (GTK_COMBO_BOX (priv->critical_battery_combo), value);
++    }
+   if (g_str_has_prefix (key, "sleep-inactive-"))
+     {
+       update_automatic_suspend_label (self);
+@@ -2045,9 +2082,12 @@
+   GtkWidget *sw, *row;
+   gchar *s;
+   gint value;
++  GtkTreeModel *model;
+   GtkWidget *dialog;
+   GtkWidget *combo;
+-  GtkTreeModel *model;
++  GtkCellRenderer *cell;
++  GVariant *result;
++  GDBusConnection *connection;
+   GsdPowerButtonActionType button_value;
+ 
+   /* The default values for these settings are unfortunate for us;
+@@ -2134,6 +2174,77 @@
+   gtk_size_group_add_widget (priv->row_sizegroup, row);
+   update_automatic_suspend_label (self);
+ 
++  priv->critical_battery_row = row = gtk_list_box_row_new ();
++  box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
++  gtk_container_add (GTK_CONTAINER (row), box);
++  label = gtk_label_new (_("When battery power is _critical"));
++  gtk_widget_set_halign (label, GTK_ALIGN_START);
++  gtk_label_set_use_underline (GTK_LABEL (label), TRUE);
++  gtk_widget_set_margin_start (label, 20);
++  gtk_widget_set_margin_end (label, 20);
++  gtk_widget_set_margin_top (label, 6);
++  gtk_widget_set_margin_bottom (label, 6);
++  gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 0);
++
++  value = 0;
++
++  connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
++  result = g_dbus_connection_call_sync (connection,
++                                        "org.freedesktop.login1",
++                                        "/org/freedesktop/login1",
++                                        "org.freedesktop.login1.Manager",
++                                        "CanHibernate",
++                                        NULL,
++                                        NULL,
++                                        G_DBUS_CALL_FLAGS_NONE,
++                                        -1,
++                                        NULL,
++                                        NULL);
++  g_object_unref (connection);
++
++  if (result)
++    {
++      GVariant *result_variant = g_variant_get_child_value (result, 0);
++      if (g_strcmp0 (g_variant_get_string (result_variant, NULL), "yes") == 0)
++        value = 1;
++
++      g_variant_unref(result_variant);
++      g_variant_unref(result);
++    }
++
++  if (value)
++    {
++      model = (GtkTreeModel*)gtk_builder_get_object (priv->builder, "liststore_critical");
++      priv->critical_battery_combo = sw = gtk_combo_box_new_with_model (model);
++      gtk_label_set_mnemonic_widget (GTK_LABEL (label), sw);
++      cell = gtk_cell_renderer_text_new ();
++      gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (sw), cell, TRUE);
++      gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (sw), cell, "text", 0);
++      gtk_widget_set_margin_start (sw, 20);
++      gtk_widget_set_margin_end (sw, 20);
++      gtk_widget_set_valign (sw, GTK_ALIGN_CENTER);
++
++      g_object_set_data (G_OBJECT (sw), "_gsettings_key", "critical-battery-action");
++      value = g_settings_get_enum (priv->gsd_settings, "critical-battery-action");
++      set_value_for_combo (GTK_COMBO_BOX (sw), value);
++      g_signal_connect (sw, "changed",
++                        G_CALLBACK (combo_enum_changed_cb), self);
++
++      gtk_box_pack_start (GTK_BOX (box), sw, FALSE, TRUE, 0);
++    }
++  else
++    {
++      label = gtk_label_new (_("Power Off"));
++      gtk_widget_set_margin_start (label, 20);
++      gtk_widget_set_margin_end (label, 20);
++      gtk_widget_set_margin_top (label, 6);
++      gtk_widget_set_margin_bottom (label, 6);
++      gtk_box_pack_start (GTK_BOX (box), label, FALSE, TRUE, 0);
++    }
++
++  gtk_container_add (GTK_CONTAINER (widget), row);
++  gtk_size_group_add_widget (priv->row_sizegroup, row);
++
+   dialog = priv->automatic_suspend_dialog;
+   g_signal_connect (dialog, "delete-event", G_CALLBACK (gtk_widget_hide_on_delete), NULL);
+   g_signal_connect (priv->gsd_settings, "changed", G_CALLBACK (on_suspend_settings_changed), self);
+diff '--exclude=.git' -urN a/panels/power/power.ui b/panels/power/power.ui
+--- a/panels/power/power.ui	2016-02-25 09:32:24.000000000 -0500
++++ b/panels/power/power.ui	2016-04-04 02:24:10.235318054 -0400
+@@ -1,6 +1,24 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <interface>
+   <!-- interface-requires gtk+ 3.0 -->
++  <object class="GtkListStore" id="liststore_critical">
++    <columns>
++      <!-- column-name name -->
++      <column type="gchararray"/>
++      <!-- column-name value -->
++      <column type="gint"/>
++    </columns>
++    <data>
++      <row>
++        <col id="0" translatable="yes">Hibernate</col>
++        <col id="1">3</col>
++      </row>
++      <row>
++        <col id="0" translatable="yes">Power off</col>
++        <col id="1">2</col>
++      </row>
++    </data>
++  </object>
+   <object class="GtkListStore" id="liststore_time">
+     <columns>
+       <!-- column-name name -->
