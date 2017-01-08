@@ -234,7 +234,7 @@ treeprep_steps += [
 	RunSed(["profiles/repo_name"], ["s/.*/gentoo/"])
 ]
 
-all_steps = [ base_steps, profile_steps, ebuild_additions, ebuild_modifications, eclass_steps, master_steps, treeprep_steps ]
+all_steps = [ base_steps, profile_steps, ebuild_additions, eclass_steps, master_steps, ebuild_modifications, treeprep_steps ]
 
 for step in all_steps:
 	funtoo_staging_w.run(step)
