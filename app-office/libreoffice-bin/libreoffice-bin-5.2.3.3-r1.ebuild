@@ -64,7 +64,7 @@ BIN_COMMON_DEPEND="
 	media-libs/harfbuzz:0/0.9.18[icu]
 	media-libs/libpng:0/16
 	virtual/jpeg:62
-	kde? ( >=kde-base/kdelibs-4.14.8:4 >=dev-qt/qtcore-4.8.6-r2:4 >=dev-qt/qtgui-4.8.6-r4:4 )
+	kde? ( >=kde-frameworks/kdelibs-4.14.8:4 >=dev-qt/qtcore-4.8.6-r2:4 >=dev-qt/qtgui-4.8.6-r4:4 )
 "
 
 # PLEASE place any restrictions that are specific to the binary builds
