@@ -1,0 +1,14 @@
+--- libOSC/sendOSC/Makefile.am	2015-05-03 08:03:20.000000000 -0600
++++ Makefile-new.am	2015-05-24 22:36:49.079804229 -0600
+@@ -19,10 +19,8 @@
+ 
+ sendOSC_PROGRAMS = sendOSC
+ 
+-installdirs:
+-	$(MKDIR_P) "$(DESTDIR)$(bindir)"
+-
+ install-exec-local:
++	$(MKDIR_P) "$(DESTDIR)$(bindir)"
+ 	cp -f $(sendOSC) "$(DESTDIR)$(bindir)" && chmod a+rx "$(DESTDIR)$(bindir)/$(sendOSC)"
+ 
+ 
