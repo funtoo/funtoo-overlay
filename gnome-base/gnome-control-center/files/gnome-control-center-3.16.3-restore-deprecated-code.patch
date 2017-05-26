@@ -1,0 +1,379 @@
+diff '--exclude=.git' -urN gnome-control-center-3.16.3/config.h.in gnome-control-center-3.16.3-patch/config.h.in
+--- gnome-control-center-3.16.3/config.h.in	2015-07-21 10:32:50.000000000 -0400
++++ gnome-control-center-3.16.3-patch/config.h.in	2015-09-24 18:30:45.334994236 -0400
+@@ -12,6 +12,9 @@
+ /* Define to 1 to build the Wacom panel */
+ #undef BUILD_WACOM
+ 
++/* Define if we should build deprecated functionalty */
++#undef ENABLE_DEPRECATED
++
+ /* Gettext package */
+ #undef GETTEXT_PACKAGE
+ 
+diff '--exclude=.git' -urN gnome-control-center-3.16.3/configure gnome-control-center-3.16.3-patch/configure
+--- gnome-control-center-3.16.3/configure	2015-07-21 10:32:38.000000000 -0400
++++ gnome-control-center-3.16.3-patch/configure	2015-09-24 18:30:45.336994225 -0400
+@@ -643,6 +643,8 @@
+ UPDATE_MIME_DATABASE
+ PANEL_LIBS
+ PANEL_CFLAGS
++ENABLE_DEPRECATED_FALSE
++ENABLE_DEPRECATED_TRUE
+ KRB5_LIBS
+ KRB5_CFLAGS
+ KRB5_CONFIG
+@@ -964,6 +966,7 @@
+ enable_ibus
+ enable_cups
+ with_cheese
++enable_deprecated
+ enable_update_mimedb
+ enable_more_warnings
+ '
+@@ -1698,6 +1701,7 @@
+   --enable-documentation  build documentation
+   --disable-ibus          Disable IBus support
+   --disable-cups          disable CUPS support (default: enabled)
++  --enable-deprecated     build deprecated functionality
+   --disable-update-mimedb do not update mime database after installation
+   --enable-more-warnings  Maximum compiler warnings
+ 
+@@ -18161,6 +18165,28 @@
+ USER_ACCOUNTS_PANEL_CFLAGS="$USER_ACCOUNTS_PANEL_CFLAGS $KRB5_CFLAGS"
+ USER_ACCOUNTS_PANEL_LIBS="$USER_ACCOUNTS_PANEL_LIBS $KRB5_LIBS"
+ 
++# Build deprecated functionality
++# Check whether --enable-deprecated was given.
++if test "${enable_deprecated+set}" = set; then :
++  enableval=$enable_deprecated; enable_deprecated=$enableval
++else
++  enable_deprecated=no
++fi
++
++if test "${enable_deprecated}" != no; then
++
++$as_echo "#define ENABLE_DEPRECATED 1" >>confdefs.h
++
++fi
++ if test x$enable_deprecated = xyes; then
++  ENABLE_DEPRECATED_TRUE=
++  ENABLE_DEPRECATED_FALSE='#'
++else
++  ENABLE_DEPRECATED_TRUE='#'
++  ENABLE_DEPRECATED_FALSE=
++fi
++
++
+ 
+ PANEL_CFLAGS="-I\$(top_srcdir)/ -DG_LOG_DOMAIN=\"\\\"\$(cappletname)-cc-panel\\\"\" -DPANEL_ID=\"\\\"\$(cappletname)\\\"\""
+ 
+@@ -18586,6 +18612,10 @@
+   as_fn_error $? "conditional \"BUILD_WACOM\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+ fi
++if test -z "${ENABLE_DEPRECATED_TRUE}" && test -z "${ENABLE_DEPRECATED_FALSE}"; then
++  as_fn_error $? "conditional \"ENABLE_DEPRECATED\" was never defined.
++Usually this means the macro was only invoked conditionally." "$LINENO" 5
++fi
+ if test -z "${ENABLE_UPDATE_MIMEDB_TRUE}" && test -z "${ENABLE_UPDATE_MIMEDB_FALSE}"; then
+   as_fn_error $? "conditional \"ENABLE_UPDATE_MIMEDB\" was never defined.
+ Usually this means the macro was only invoked conditionally." "$LINENO" 5
+@@ -20950,49 +20980,33 @@
+ fi
+ 
+ 
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: gnome-control-center was configured with the following options:" >&5
+-$as_echo "$as_me: gnome-control-center was configured with the following options:" >&6;}
+-if test "x$have_networkmanager" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** NetworkManager (Network panel)" >&5
+-$as_echo "$as_me: ** NetworkManager (Network panel)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Network panel disabled" >&5
+-$as_echo "$as_me:    Network panel disabled" >&6;}
+-fi
+-if test "x$have_bluetooth" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** gnome-bluetooth (Bluetooth panel)" >&5
+-$as_echo "$as_me: ** gnome-bluetooth (Bluetooth panel)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Bluetooth panel disabled" >&5
+-$as_echo "$as_me:    Bluetooth panel disabled" >&6;}
+-fi
+-if test "x$enable_cups" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** CUPS (Printers panel)" >&5
+-$as_echo "$as_me: ** CUPS (Printers panel)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Printers panel disabled" >&5
+-$as_echo "$as_me:    Printers panel disabled" >&6;}
+-fi
+-if test "x$have_cheese" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** Cheese (Users panel webcam support)" >&5
+-$as_echo "$as_me: ** Cheese (Users panel webcam support)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Users panel webcam support disabled" >&5
+-$as_echo "$as_me:    Users panel webcam support disabled" >&6;}
+-fi
+-if test "x$have_wacom" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** wacom (Wacom tablet panel)" >&5
+-$as_echo "$as_me: ** wacom (Wacom tablet panel)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Wacom panel disabled" >&5
+-$as_echo "$as_me:    Wacom panel disabled" >&6;}
+-fi
+-if test "x$enable_ibus" = "xyes"; then
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}: ** IBus (Region panel IBus support)" >&5
+-$as_echo "$as_me: ** IBus (Region panel IBus support)" >&6;}
+-else
+-	{ $as_echo "$as_me:${as_lineno-$LINENO}:    Region panel IBus support disabled" >&5
+-$as_echo "$as_me:    Region panel IBus support disabled" >&6;}
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: End options" >&5
+-$as_echo "$as_me: End options" >&6;}
++
++echo "
++              gnome-control-center $VERSION
++              `echo gnome-control-center $VERSION | sed "s/./=/g"`
++
++        prefix:                   ${prefix}
++        exec_prefix:              ${exec_prefix}
++        libdir:                   ${libdir}
++        bindir:                   ${bindir}
++        sbindir:                  ${sbindir}
++        sysconfdir:               ${sysconfdir}
++        localstatedir:            ${localstatedir}
++        datadir:                  ${datadir}
++        source code location:     ${srcdir}
++        compiler:                 ${CC}
++        cflags:                   ${CFLAGS}
++        Maintainer mode:          ${USE_MAINTAINER_MODE}
++
++        NetworkManager support:   ${have_networkmanager}
++        Bluetooth support:        ${have_bluetooth}
++        Color support:            ${build_color}
++        CUPS support:             ${enable_cups}
++        Cheese support:           ${have_cheese}
++        Online Accounts support:  ${build_online_accounts}
++        Wacom Tablet support:     ${build_wacom}
++        Wacom support:            ${have_wacom}
++        IBus support:             ${enable_ibus}
++        Enable deprecated stuff:  ${enable_deprecated}
++
++"
+diff '--exclude=.git' -urN gnome-control-center-3.16.3/configure.ac gnome-control-center-3.16.3-patch/configure.ac
+--- gnome-control-center-3.16.3/configure.ac	2015-09-24 18:15:39.758091857 -0400
++++ gnome-control-center-3.16.3-patch/configure.ac	2015-09-24 18:30:45.336994225 -0400
+@@ -440,6 +440,15 @@
+ USER_ACCOUNTS_PANEL_CFLAGS="$USER_ACCOUNTS_PANEL_CFLAGS $KRB5_CFLAGS"
+ USER_ACCOUNTS_PANEL_LIBS="$USER_ACCOUNTS_PANEL_LIBS $KRB5_LIBS"
+ 
++# Build deprecated functionality
++AC_ARG_ENABLE(deprecated, [  --enable-deprecated     build deprecated functionality],
++             enable_deprecated=$enableval,
++             enable_deprecated=no)
++if test "${enable_deprecated}" != no; then
++  AC_DEFINE(ENABLE_DEPRECATED, 1, [Define if we should build deprecated functionalty])
++fi
++AM_CONDITIONAL(ENABLE_DEPRECATED, test x$enable_deprecated = xyes)
++
+ dnl =======================================
+ dnl Panels
+ dnl =======================================
+@@ -641,50 +650,36 @@
+ 
+ AC_OUTPUT
+ 
+-AC_MSG_NOTICE([gnome-control-center was configured with the following options:])
+-if test "x$have_networkmanager" = "xyes"; then
+-	AC_MSG_NOTICE([** NetworkManager (Network panel)])
+-else
+-	AC_MSG_NOTICE([   Network panel disabled])
+-fi
+-if test "x$have_bluetooth" = "xyes"; then
+-	AC_MSG_NOTICE([** gnome-bluetooth (Bluetooth panel)])
+-else
+-	AC_MSG_NOTICE([   Bluetooth panel disabled])
+-fi
+-if test "x$build_color" = "xtrue"; then
+-	AC_MSG_NOTICE([** colord (Color panel)])
+-else
+-	AC_MSG_NOTICE([   Color panel disabled])
+-fi
+-if test "x$enable_cups" = "xyes"; then
+-	AC_MSG_NOTICE([** CUPS (Printers panel)])
+-else
+-	AC_MSG_NOTICE([   Printers panel disabled])
+-fi
+-if test "x$have_cheese" = "xyes"; then
+-	AC_MSG_NOTICE([** Cheese (Users panel webcam support)])
+-else
+-	AC_MSG_NOTICE([   Users panel webcam support disabled])
+-fi
+-if test "x$build_online_accounts" = "xtrue"; then
+-       AC_MSG_NOTICE([** gnome-online-accounts (Online Accounts panel)])
+-else
+-       AC_MSG_NOTICE([   Online Accounts panel disabled])
+-fi
+-if test "x$build_wacom" = "xtrue"; then
+-       AC_MSG_NOTICE([** libwacom (Wacom Graphics Tablet panel)])
+-else
+-       AC_MSG_NOTICE([   Wacom Graphics Tablet panel disabled])
+-fi
+-if test "x$have_wacom" = "xyes"; then
+-	AC_MSG_NOTICE([** wacom (Wacom tablet panel)])
+-else
+-	AC_MSG_NOTICE([   Wacom panel disabled])
+-fi
+-if test "x$enable_ibus" = "xyes"; then
+-	AC_MSG_NOTICE([** IBus (Region panel IBus support)])
+-else
+-	AC_MSG_NOTICE([   Region panel IBus support disabled])
+-fi
+-AC_MSG_NOTICE([End options])
++dnl ---------------------------------------------------------------------------
++dnl - Show summary
++dnl ---------------------------------------------------------------------------
++
++echo "
++              gnome-control-center $VERSION
++              `echo gnome-control-center $VERSION | sed "s/./=/g"`
++
++        prefix:                   ${prefix}
++        exec_prefix:              ${exec_prefix}
++        libdir:                   ${libdir}
++        bindir:                   ${bindir}
++        sbindir:                  ${sbindir}
++        sysconfdir:               ${sysconfdir}
++        localstatedir:            ${localstatedir}
++        datadir:                  ${datadir}
++        source code location:     ${srcdir}
++        compiler:                 ${CC}
++        cflags:                   ${CFLAGS}
++        Maintainer mode:          ${USE_MAINTAINER_MODE}
++
++        NetworkManager support:   ${have_networkmanager}
++        Bluetooth support:        ${have_bluetooth}
++        Color support:            ${build_color}
++        CUPS support:             ${enable_cups}
++        Cheese support:           ${have_cheese}
++        Online Accounts support:  ${build_online_accounts}
++        Wacom Tablet support:     ${build_wacom}
++        Wacom support:            ${have_wacom}
++        IBus support:             ${enable_ibus}
++        Enable deprecated stuff:  ${enable_deprecated}
++
++"
+diff '--exclude=.git' -urN gnome-control-center-3.16.3/panels/power/cc-power-panel.c gnome-control-center-3.16.3-patch/panels/power/cc-power-panel.c
+--- gnome-control-center-3.16.3/panels/power/cc-power-panel.c	2015-09-24 18:31:04.611883054 -0400
++++ gnome-control-center-3.16.3-patch/panels/power/cc-power-panel.c	2015-09-24 18:30:45.336994225 -0400
+@@ -1860,6 +1860,34 @@
+     }
+ 
+ 
++  value = 0;
++
++#ifdef ENABLE_DEPRECATED
++  value = up_client_get_can_suspend (self->priv->up_client);
++#else
++  connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
++  result = g_dbus_connection_call_sync (connection,
++                                        "org.freedesktop.login1",
++                                        "/org/freedesktop/login1",
++                                        "org.freedesktop.login1.Manager",
++                                        "CanSuspend",
++                                        NULL,
++                                        NULL,
++                                        G_DBUS_CALL_FLAGS_NONE,
++                                        -1,
++                                        NULL,
++                                        NULL);
++  g_object_unref (connection);
++
++  if (result)
++    {
++      g_variant_get (result, "(s)", &s);
++      if (g_strcmp0 (s, "yes") == 0)
++        value = 1;
++      g_variant_unref(result);
++    }
++#endif /* ENABLE_DEPRECATED */
++
+   vbox = WID (priv->builder, "vbox_power");
+ 
+   s = g_markup_printf_escaped ("<b>%s</b>", _("Suspend & Power Off"));
+@@ -1880,8 +1908,11 @@
+   gtk_list_box_set_header_func (GTK_LIST_BOX (widget),
+                                 cc_list_box_update_header_func,
+                                 NULL, NULL);
+-  g_signal_connect_swapped (widget, "row-activated",
+-                            G_CALLBACK (activate_row), self);
++  if (value)
++    {
++      g_signal_connect_swapped (widget, "row-activated",
++                                G_CALLBACK (activate_row), self);
++    }
+ 
+   atk_object_add_relationship (ATK_OBJECT (gtk_widget_get_accessible (label)),
+                                ATK_RELATION_LABEL_FOR,
+@@ -1913,16 +1944,34 @@
+   gtk_box_pack_start (GTK_BOX (box), label, TRUE, TRUE, 0);
+ 
+   priv->automatic_suspend_label = sw = gtk_label_new ("");
+-  gtk_label_set_mnemonic_widget (GTK_LABEL (label), sw);
+-  g_signal_connect (sw, "mnemonic-activate",
+-                    G_CALLBACK (automatic_suspend_activate), self);
+-  gtk_widget_set_halign (sw, GTK_ALIGN_END);
+-  gtk_widget_set_margin_start (sw, 24);
+-  gtk_widget_set_margin_end (sw, 24);
+-  gtk_box_pack_start (GTK_BOX (box), sw, FALSE, TRUE, 0);
+-  gtk_container_add (GTK_CONTAINER (widget), row);
+-  gtk_size_group_add_widget (priv->row_sizegroup, row);
+-  update_automatic_suspend_label (self);
++
++  if (value)
++    {
++      gtk_label_set_mnemonic_widget (GTK_LABEL (label), sw);
++      g_signal_connect (sw, "mnemonic-activate",
++                        G_CALLBACK (automatic_suspend_activate), self);
++      gtk_misc_set_alignment (GTK_MISC (sw), 1, 0.5);
++      gtk_widget_set_margin_start (sw, 24);
++      gtk_widget_set_margin_end (sw, 24);
++      gtk_box_pack_start (GTK_BOX (box), sw, FALSE, TRUE, 0);
++    }
++  else
++    {
++      label = gtk_label_new (_("Disabled"));
++      gtk_widget_set_margin_start (label, 20);
++      gtk_widget_set_margin_end (label, 20);
++      gtk_widget_set_margin_top (label, 6);
++      gtk_widget_set_margin_bottom (label, 6);
++      gtk_box_pack_start (GTK_BOX (box), label, FALSE, TRUE, 0);
++    }
++
++      gtk_container_add (GTK_CONTAINER (widget), row);
++      gtk_size_group_add_widget (priv->row_sizegroup, row);
++
++  if (value)
++    {
++      update_automatic_suspend_label (self);
++    }
+ 
+   priv->critical_battery_row = row = gtk_list_box_row_new ();
+   box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
+@@ -1938,6 +1987,9 @@
+ 
+   value = 0;
+ 
++#ifdef ENABLE_DEPRECATED
++  value = up_client_get_can_hibernate (self->priv->up_client);
++#else
+   connection = g_bus_get_sync (G_BUS_TYPE_SYSTEM, NULL, NULL);
+   result = g_dbus_connection_call_sync (connection,
+                                         "org.freedesktop.login1",
+@@ -1961,6 +2013,7 @@
+       g_variant_unref(result_variant);
+       g_variant_unref(result);
+     }
++#endif /* ENABLE_DEPRECATED */
+ 
+   if (value)
+     {

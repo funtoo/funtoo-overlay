@@ -1,0 +1,226 @@
+diff '--exclude=.git' -urN a/panels/datetime/cc-datetime-panel.c b/panels/datetime/cc-datetime-panel.c
+--- a/panels/datetime/cc-datetime-panel.c	2015-09-21 10:59:31.000000000 -0400
++++ b/panels/datetime/cc-datetime-panel.c	2015-11-18 03:33:04.845703316 -0500
+@@ -392,25 +392,6 @@
+ }
+ 
+ static void
+-set_using_ntp_cb (GObject      *source,
+-                  GAsyncResult *res,
+-                  gpointer      user_data)
+-{
+-  CcDateTimePanel *self = user_data;
+-  GError *error;
+-
+-  error = NULL;
+-  if (!timedate1_call_set_ntp_finish (self->priv->dtm,
+-                                      res,
+-                                      &error))
+-    {
+-      /* TODO: display any error in a user friendly way */
+-      g_warning ("Could not set system to use NTP: %s", error->message);
+-      g_error_free (error);
+-    }
+-}
+-
+-static void
+ queue_set_datetime (CcDateTimePanel *self)
+ {
+   gint64 unixtime;
+@@ -428,22 +409,6 @@
+ }
+ 
+ static void
+-queue_set_ntp (CcDateTimePanel *self)
+-{
+-  CcDateTimePanelPrivate *priv = self->priv;
+-  gboolean using_ntp;
+-  /* for now just do it */
+-  using_ntp = gtk_switch_get_active (GTK_SWITCH (W("network_time_switch")));
+-
+-  timedate1_call_set_ntp (self->priv->dtm,
+-                          using_ntp,
+-                          TRUE,
+-                          self->priv->cancellable,
+-                          set_using_ntp_cb,
+-                          self);
+-}
+-
+-static void
+ queue_set_timezone (CcDateTimePanel *self)
+ {
+   /* for now just do it */
+@@ -743,14 +708,6 @@
+   queue_set_datetime (panel);
+ }
+ 
+-static void
+-change_ntp (GObject         *gobject,
+-            GParamSpec      *pspec,
+-            CcDateTimePanel *self)
+-{
+-  queue_set_ntp (self);
+-}
+-
+ static gboolean
+ is_ntp_available (CcDateTimePanel *self)
+ {
+@@ -780,12 +737,8 @@
+   gboolean allowed, auto_timezone, using_ntp;
+ 
+   allowed = (priv->permission != NULL && g_permission_get_allowed (priv->permission));
+-  using_ntp = gtk_switch_get_active (GTK_SWITCH (W("network_time_switch")));
+-  auto_timezone = gtk_switch_get_active (GTK_SWITCH (W("auto_timezone_switch")));
+ 
+   /* All the widgets but the lock button and the 24h setting */
+-  gtk_widget_set_sensitive (W("auto-datetime-row"), allowed);
+-  gtk_widget_set_sensitive (W("auto-timezone-row"), allowed);
+   gtk_widget_set_sensitive (W("datetime-button"), allowed && !using_ntp);
+   gtk_widget_set_sensitive (W("timezone-button"), allowed && !auto_timezone);
+ 
+@@ -798,21 +751,6 @@
+ }
+ 
+ static void
+-on_can_ntp_changed (CcDateTimePanel *self)
+-{
+-  CcDateTimePanelPrivate *priv = self->priv;
+-  gtk_widget_set_visible (W ("auto-datetime-row"), is_ntp_available (self));
+-}
+-
+-static void
+-on_timezone_changed (CcDateTimePanel *self)
+-{
+-  g_signal_handlers_block_by_func (self->priv->map, location_changed_cb, self);
+-  get_initial_timezone (self);
+-  g_signal_handlers_unblock_by_func (self->priv->map, location_changed_cb, self);
+-}
+-
+-static void
+ on_timedated_properties_changed (GDBusProxy       *proxy,
+                                  GVariant         *changed_properties,
+                                  const gchar     **invalidated_properties,
+@@ -940,15 +878,7 @@
+ 
+   gtk_list_box_select_row (listbox, NULL);
+ 
+-  if (!g_strcmp0 (widget_name, "auto-datetime-row"))
+-    {
+-      toggle_switch (W ("network_time_switch"));
+-    }
+-  else if (!g_strcmp0 (widget_name, "auto-timezone-row"))
+-    {
+-      toggle_switch (W ("auto_timezone_switch"));
+-    }
+-  else if ((found = g_strrstr (widget_name, "button")))
++  if ((found = g_strrstr (widget_name, "button")))
+     {
+       /* replace "button" with "dialog" */
+       memcpy (found, "dialog", 6);
+@@ -1290,28 +1220,6 @@
+   setup_listbox (self, W ("listbox1"));
+   setup_listbox (self, W ("listbox2"));
+ 
+-  /* set up network time switch */
+-  bind_switch_to_row (self,
+-                      W ("network_time_switch"),
+-                      W ("datetime-button"));
+-  g_object_bind_property (priv->dtm, "ntp",
+-                          W ("network_time_switch"), "active",
+-                          G_BINDING_SYNC_CREATE);
+-  g_signal_connect (W("network_time_switch"), "notify::active",
+-                    G_CALLBACK (change_ntp), self);
+-
+-  gtk_widget_set_visible (W ("auto-datetime-row"), is_ntp_available (self));
+-
+-  /* Timezone settings */
+-  bind_switch_to_row (self,
+-                      W ("auto_timezone_switch"),
+-                      W ("timezone-button"));
+-
+-  priv->datetime_settings = g_settings_new (DATETIME_SCHEMA);
+-  g_settings_bind (priv->datetime_settings, AUTO_TIMEZONE_KEY,
+-                   W ("auto_timezone_switch"), "active",
+-                   G_SETTINGS_BIND_DEFAULT);
+-
+   /* Clock settings */
+   priv->clock_settings = g_settings_new (CLOCK_SCHEMA);
+ 
+@@ -1366,10 +1274,6 @@
+   /* Watch changes of timedated remote service properties */
+   g_signal_connect (priv->dtm, "g-properties-changed",
+                     G_CALLBACK (on_timedated_properties_changed), self);
+-  g_signal_connect_swapped (priv->dtm, "notify::can-ntp",
+-                            G_CALLBACK (on_can_ntp_changed), self);
+-  g_signal_connect_swapped (priv->dtm, "notify::timezone",
+-                            G_CALLBACK (on_timezone_changed), self);
+   /* We ignore UTC <--> LocalRTC changes at the moment */
+ 
+   priv->filechooser_settings = g_settings_new (FILECHOOSER_SCHEMA);
+diff '--exclude=.git' -urN a/panels/datetime/datetime.ui b/panels/datetime/datetime.ui
+--- a/panels/datetime/datetime.ui	2015-09-21 10:59:31.000000000 -0400
++++ b/panels/datetime/datetime.ui	2015-11-18 03:31:56.939059751 -0500
+@@ -280,7 +280,7 @@
+             <child>
+               <object class="GtkListBoxRow" id="auto-datetime-row">
+                 <property name="visible">True</property>
+-                <property name="can_focus">True</property>
++                <property name="sensitive">False</property>
+                 <child>
+                   <object class="GtkBox" id="box2">
+                     <property name="visible">True</property>
+@@ -315,7 +315,7 @@
+                             <property name="visible">True</property>
+                             <property name="can_focus">False</property>
+                             <property name="xalign">0</property>
+-                            <property name="label" translatable="yes">Requires internet access</property>
++                            <property name="label" translatable="yes">Conflicts with underlying ecosystem</property>
+                             <style>
+                               <class name="dim-label"/>
+                             </style>
+@@ -334,10 +334,11 @@
+                       </packing>
+                     </child>
+                     <child>
+-                      <object class="GtkSwitch" id="network_time_switch">
++                      <object class="GtkLabel" id="network_time_switch">
+                         <property name="visible">True</property>
+-                        <property name="can_focus">True</property>
++                        <property name="can_focus">False</property>
+                         <property name="valign">center</property>
++                        <property name="label" translatable="yes">Disabled</property>
+                         <property name="margin_start">20</property>
+                         <property name="margin_end">20</property>
+                       </object>
+@@ -354,7 +355,7 @@
+             <child>
+               <object class="GtkListBoxRow" id="auto-timezone-row">
+                 <property name="visible">True</property>
+-                <property name="can_focus">True</property>
++                <property name="sensitive">False</property>
+                 <child>
+                   <object class="GtkBox" id="box3">
+                     <property name="visible">True</property>
+@@ -389,7 +390,7 @@
+                             <property name="visible">True</property>
+                             <property name="can_focus">False</property>
+                             <property name="xalign">0</property>
+-                            <property name="label" translatable="yes">Requires internet access</property>
++                            <property name="label" translatable="yes">Conflicts with underlying ecosystem</property>
+                             <style>
+                               <class name="dim-label"/>
+                             </style>
+@@ -408,10 +409,11 @@
+                       </packing>
+                     </child>
+                     <child>
+-                      <object class="GtkSwitch" id="auto_timezone_switch">
++                      <object class="GtkLabel" id="auto_timezone_switch">
+                         <property name="visible">True</property>
+-                        <property name="can_focus">True</property>
++                        <property name="can_focus">False</property>
+                         <property name="valign">center</property>
++                        <property name="label" translatable="yes">Disabled</property>
+                         <property name="margin_start">20</property>
+                         <property name="margin_end">20</property>
+                       </object>
